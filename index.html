@@ -53,7 +53,7 @@
             display: flex;
             align-items: center;
             padding: 0 18px;
-            gap: 14px;
+            gap: 10px;
             flex-shrink: 0;
             border-bottom: 1px solid rgba(255,255,255,0.06);
         }
@@ -223,23 +223,29 @@
 
         .cam-dd-item.active .cam-dd-fov { color: rgba(138,180,248,0.65); }
 
-        .fov-chip {
-            display: flex; align-items: center; gap: 6px;
-            background: rgba(25,103,210,0.22);
-            border: 1px solid rgba(25,103,210,0.4);
-            border-radius: 20px;
-            padding: 5px 12px;
-            font-family: var(--font-mono); font-size: 12px; font-weight: 500;
-            color: #8AB4F8;
-            white-space: nowrap;
-            letter-spacing: 0.3px;
+        /* ─── CHIPS GROUP ─── */
+        .chips-group {
+            display: flex; gap: 6px; flex-shrink: 0;
         }
 
-        .fov-chip-dot {
-            width: 6px; height: 6px; border-radius: 50%;
-            background: #4A90D9;
-            box-shadow: 0 0 0 3px rgba(74,144,217,0.25);
+        .fov-chip {
+            display: flex; align-items: center; gap: 5px;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+            border: 1px solid transparent;
         }
+
+        .chip-blue { background: rgba(25,103,210,0.22); border-color: rgba(25,103,210,0.4); color: #8AB4F8; }
+        .chip-purple { background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.4); color: #C4B5FD; }
+        .chip-amber { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.4); color: #FCD34D; }
+
+        .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .dot-blue { background: #4A90D9; box-shadow: 0 0 0 3px rgba(74,144,217,0.25); }
+        .dot-purple { background: #8B5CF6; box-shadow: 0 0 0 3px rgba(139,92,246,0.25); }
+        .dot-amber { background: #F59E0B; box-shadow: 0 0 0 3px rgba(245,158,11,0.25); }
 
         /* ─── APP BODY ─── */
         .app-body { flex: 1; display: flex; overflow: hidden; }
@@ -279,22 +285,37 @@
 
         .ct-spacer { flex: 1; }
 
-        .ct-hint {
-            font-size: 11px; color: rgba(255,255,255,0.22);
-            display: flex; align-items: center; gap: 8px;
-            padding: 0 6px;
+        .canvas-container {
+            flex: 1; display: block; position: relative;
+            background: #0D1117; overflow: hidden;
         }
 
-        .ct-hint-dot { width: 5px; height: 5px; border-radius: 50%; }
-
-        .canvas-scroll {
-            flex: 1; display: flex;
-            align-items: center; justify-content: center;
-            overflow: auto;
-            padding: 24px;
+        canvas { 
+            display: block; width: 100%; height: 100%; 
+            touch-action: none;
         }
 
-        canvas { display: block; }
+        /* ─── CANVAS CONTROLS (ZOOM/PAN) ─── */
+        .canvas-controls {
+            position: absolute; bottom: 24px; right: 24px;
+            background: rgba(22, 28, 44, 0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; display: flex; align-items: center;
+            padding: 4px; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .canvas-controls button {
+            background: transparent; border: none; color: #E8EDF8;
+            width: 32px; height: 32px; border-radius: 6px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .canvas-controls button:hover { background: rgba(255,255,255,0.1); }
+        .canvas-controls span {
+            font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: #E8EDF8;
+            min-width: 48px; text-align: center; user-select: none;
+        }
 
         /* ─── SIDEBAR ─── */
         .sidebar {
@@ -436,7 +457,6 @@
 </head>
 <body>
 
-<!-- ══ TOP BAR ══ -->
 <div class="topbar">
     <div class="brand">
         <div class="brand-icon">
@@ -447,7 +467,7 @@
             </svg>
         </div>
         <span class="brand-name">AV Space Planner</span>
-        <span class="brand-version">v2.0</span>
+        <span class="brand-version">v2.1</span>
     </div>
 
     <div class="topbar-divider"></div>
@@ -465,36 +485,50 @@
         </div>
     </div>
 
-    <div class="fov-chip">
-        <div class="fov-chip-dot"></div>
-        FOV&nbsp;<span id="fovDisplay">110°</span>
+    <div class="chips-group">
+        <div class="fov-chip chip-blue" id="chipFov">
+            <div class="chip-dot dot-blue"></div>
+            FOV&nbsp;<span id="fovDisplay">110°</span>
+        </div>
+        <div class="fov-chip chip-purple" id="chipDof" style="display:none;">
+            <div class="chip-dot dot-purple"></div>
+            DoF&nbsp;<span id="dofDisplay">-</span>
+        </div>
+        <div class="fov-chip chip-amber" id="chipAudio" style="display:none;">
+            <div class="chip-dot dot-amber"></div>
+            Mic&nbsp;<span id="audioDisplay">-</span>
+        </div>
     </div>
 </div>
 
-<!-- ══ APP BODY ══ -->
 <div class="app-body">
 
-    <!-- Canvas -->
     <div class="canvas-area">
         <div class="canvas-toolbar">
             <div class="ct-item">חדר:&nbsp;<strong id="roomDimDisplay">4.8 × 5.4 מ׳</strong></div>
             <div class="ct-item">שולחן:&nbsp;<strong id="tableDimDisplay">1.4 × 2.4 מ׳</strong></div>
             <div class="ct-spacer"></div>
-            <div class="ct-hint">
-                <div class="ct-hint-dot" style="background:#3B82F6"></div> גרור מצלמה
-                <div class="ct-hint-dot" style="background:#A78BFA; margin-right:4px"></div> גרור שולחן
-            </div>
         </div>
-        <div class="canvas-scroll">
+        <div class="canvas-container" id="canvasContainer">
             <canvas id="roomCanvas"></canvas>
+            <div class="canvas-controls">
+                <button id="btnZoomOut" title="Zoom Out (Mouse Wheel Down)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+                <span id="zoomDisplay">100%</span>
+                <button id="btnZoomIn" title="Zoom In (Mouse Wheel Up)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+                <button id="btnResetView" title="Center Room">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-scroll">
 
-            <!-- Camera rotation -->
             <div class="sidebar-section">
                 <div class="sec-head">
                     <div class="sec-icon si-blue">
@@ -511,7 +545,6 @@
                 </div>
             </div>
 
-            <!-- Room -->
             <div class="sidebar-section">
                 <div class="sec-head">
                     <div class="sec-icon si-amber">
@@ -531,7 +564,6 @@
                 </div>
             </div>
 
-            <!-- Table -->
             <div class="sidebar-section">
                 <div class="sec-head">
                     <div class="sec-icon si-green">
@@ -551,10 +583,7 @@
                 </div>
             </div>
 
-        </div><!-- /sidebar-scroll -->
-
-        <!-- Stats panel pinned at bottom -->
-        <div class="stats-panel">
+        </div><div class="stats-panel">
             <div class="stats-headline">ניתוח כיסוי · Real-time</div>
             <div class="stats-main">
                 <div class="ring-wrap">
@@ -568,74 +597,126 @@
                 </div>
                 <div class="stats-numbers">
                     <div class="stats-pct s-good" id="coverageMetric">0%</div>
-                    <div class="stat-label">כיסוי כיסאות ב-FOV</div>
+                    <div class="stat-label">כיסוי כיסאות נתמך (FOV+DoF)</div>
                 </div>
             </div>
             <div class="hints">
                 <div class="hint">
                     <div class="hd" style="background:#3B82F6"></div>
-                    <span>גרור את <b>המצלמה</b> (עיגול כחול) לאורך קיר</span>
+                    <span><b>שטח כחול (Fade)</b>: מופיע בהתאם למקסימום פוקוס ה-DoF של המצלמה.</span>
                 </div>
                 <div class="hint">
-                    <div class="hd" style="background:#8B5CF6"></div>
-                    <span>גרור את <b>השולחן</b> לבחינת מרחקי עבודה</span>
+                    <div class="hd" style="background:#F59E0B"></div>
+                    <span><b>קשת כתומה מקווקוות</b>: מסמלת את טווח קליטת המיקרופונים.</span>
                 </div>
                 <div class="hint">
                     <div class="hd" style="background:#10B981"></div>
-                    <span><b style="color:#10B981">ירוק</b> = בתוך FOV &nbsp;·&nbsp; <b style="color:#EF4444">אדום</b> = מחוץ ל-FOV</span>
+                    <span><b>ירוק/אדום</b>: כיסא ירוק נמצא בטווח הצפייה התקין במלואו.</span>
                 </div>
             </div>
         </div>
 
-    </div><!-- /sidebar -->
-</div><!-- /app-body -->
-
-<script>
+    </div></div><script>
     const cameras = [
-        { name: "MeetingBar A10", fov: 105 },
-        { name: "MeetingBar A20", fov: 110 },
-        { name: "MeetingBar A25 (Wide)", fov: 151 },
-        { name: "MeetingBar A25 (Tele)", fov: 84.4 },
-        { name: "MeetingBar A30 (Wide)", fov: 112 },
-        { name: "MeetingBar A30 (Tele)", fov: 81 },
-        { name: "MeetingBar A40", fov: 110 },
-        { name: "MeetingBar A50 (Wide)", fov: 98 },
-        { name: "MeetingBar A50 (Tele)", fov: 41.6 },
-        { name: "SmartVision 40", fov: 110 },
-        { name: "SmartVision 80 (PTZ)", fov: 61.5 },
-        { name: "SmartVision 80 (Wide)", fov: 98 },
-        { name: "SmartVision 80 (Tele)", fov: 41.6 },
-        { name: "MTower (Wide)", fov: 151 },
-        { name: "MTower (Tele)", fov: 84.4 },
-        { name: "UVC85", fov: 80 },
-        { name: "UVC86 (Wide)", fov: 110 },
-        { name: "UVC86 (PTZ)", fov: 81 },
-        { name: "MeetingBoard (65/86)", fov: 110 },
-        { name: "MeetingBoard Pro/C EDLA", fov: 98.2 },
-        { name: "MB-12X Pro", fov: 80 },
-        { name: "MB-Camera-6X", fov: 80 },
-        { name: "MB-Camera-12X", fov: 90 },
-        { name: "UVC34 / UVC40 E2", fov: 120 },
-        { name: "DeskVision A24", fov: 83 }
+      { "name": "MeetingBar A10", "hfov": 105, "dof": "Not specified", "audio_pickup_range": "4.5m" },
+      { "name": "MeetingBar A20", "hfov": 110, "dof": "Not specified", "audio_pickup_range": "6m" },
+      { "name": "MeetingBar A25 (Wide)", "hfov": 151, "dof": "0.4m - 2.5m", "audio_pickup_range": "5m" },
+      { "name": "MeetingBar A25 (Tele)", "hfov": 84.4, "dof": "0.4m - 2.5m", "audio_pickup_range": "5m" },
+      { "name": "MeetingBar A30 (Wide)", "hfov": 112, "dof": "Not specified", "audio_pickup_range": "6m" },
+      { "name": "MeetingBar A30 (Tele)", "hfov": 81, "dof": "Not specified", "audio_pickup_range": "6m" },
+      { "name": "MeetingBar A40", "hfov": 110, "dof": "1m - 5m", "audio_pickup_range": "6m" },
+      { "name": "MeetingBar A50 (Wide)", "hfov": 98, "dof": "0.7m - 8m", "audio_pickup_range": "10m" },
+      { "name": "MeetingBar A50 (Tele)", "hfov": 41.6, "dof": "0.7m - 8m", "audio_pickup_range": "10m" },
+      { "name": "SmartVision 40", "hfov": 110, "dof": "Not specified", "audio_pickup_range": "6m" },
+      { "name": "SmartVision 80 (PTZ)", "hfov": 61.5, "dof": "Up to 15m (Max distance)", "audio_pickup_range": "N/A (Supports external mics)" },
+      { "name": "SmartVision 80 (Panoramic)", "hfov": 98, "dof": "Not specified", "audio_pickup_range": "N/A (Supports external mics)" },
+      { "name": "SmartVision 80 (Tele)", "hfov": 41.6, "dof": "Not specified", "audio_pickup_range": "N/A (Supports external mics)" },
+      { "name": "MTower (Wide)", "hfov": 151, "dof": "Not specified", "audio_pickup_range": "6m" },
+      { "name": "MTower (Tele)", "hfov": 84.4, "dof": "Not specified", "audio_pickup_range": "6m" },
+      { "name": "UVC85", "hfov": 80, "dof": "Not specified", "audio_pickup_range": "N/A (Supports external mics)" },
+      { "name": "UVC86 (Panoramic)", "hfov": 110, "dof": "Not specified", "audio_pickup_range": "N/A (Supports external mics)" },
+      { "name": "UVC86 (PTZ)", "hfov": 81, "dof": "1m - Infinity (Focal length)", "audio_pickup_range": "N/A (Supports external mics)" },
+      { "name": "MeetingBoard (65/86)", "hfov": 110, "dof": "Not specified", "audio_pickup_range": "8m" },
+      { "name": "MeetingBoard Pro", "hfov": 98.2, "dof": "Not specified", "audio_pickup_range": "12m" },
+      { "name": "MeetingBoard C EDLA", "hfov": 98.2, "dof": "Not specified", "audio_pickup_range": "8m" },
+      { "name": "MB-12X Pro", "hfov": 80, "dof": "Not specified", "audio_pickup_range": "N/A (Camera module)" },
+      { "name": "MB-Camera-6X", "hfov": 80, "dof": "Not specified", "audio_pickup_range": "N/A (Camera module)" },
+      { "name": "MB-Camera-12X", "hfov": 90, "dof": "Not specified", "audio_pickup_range": "N/A (Camera module)" },
+      { "name": "UVC34", "hfov": 120, "dof": "Not specified", "audio_pickup_range": "5m" },
+      { "name": "UVC40 E2", "hfov": 120, "dof": "Not specified", "audio_pickup_range": "6m" },
+      { "name": "DeskVision A24", "hfov": 83, "dof": "Not specified", "audio_pickup_range": "12m" }
     ];
+
+    // Data Parsers
+    function parseDoFMax(dofStr) {
+        if (!dofStr || dofStr === "Not specified") return null;
+        if (dofStr.includes("Infinity")) return Infinity;
+        
+        let max = null;
+        if (dofStr.includes("-")) {
+            const parts = dofStr.split("-");
+            max = parseFloat(parts[1].replace(/[^\d.]/g, ''));
+        } else if (dofStr.includes("Up to")) {
+            const maxMatch = dofStr.match(/([\d.]+)/);
+            if (maxMatch) max = parseFloat(maxMatch[1]);
+        }
+        return isNaN(max) ? null : max;
+    }
+
+    function parseAudio(audioStr) {
+        if (!audioStr || audioStr.includes("N/A")) return null;
+        const match = audioStr.match(/([\d.]+)/);
+        if (match) return parseFloat(match[1]);
+        return null;
+    }
 
     const RULER = 50;
     const PPM = 90;
 
     const canvas = document.getElementById('roomCanvas');
+    const container = document.getElementById('canvasContainer');
     const ctx = canvas.getContext('2d');
     const rotSlider = document.getElementById('camRotation');
     const rotVal = document.getElementById('rotVal');
 
     let room = { w: 4.8, h: 5.4 };
     let table = { x: 2.4, y: 3.0, w: 1.4, h: 2.4 };
-    let cam = { x: 2.4, y: 0.1, rot: 90, fov: 110 };
+    let cam = { x: 2.4, y: 0.1, rot: 90, hfov: 110, dofMax: null, audioRadius: null };
     let chairs = [];
+    
+    // Viewport State
+    let scale = 1.0;
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    // Interaction State
     let dragTarget = null;
+    let isPanning = false;
     let dragOffset = { x: 0, y: 0 };
+    let lastMouse = { x: 0, y: 0 };
 
     // ── Custom Dropdown ──
-    let selectedCamIdx = 6; // MeetingBar A40
+    let selectedCamIdx = 6;
+
+    function updateChips(c) {
+        document.getElementById('fovDisplay').innerText = c.hfov + '°';
+
+        const dofChip = document.getElementById('chipDof');
+        if (cam.dofMax) {
+            dofChip.style.display = 'flex';
+            document.getElementById('dofDisplay').innerText = (cam.dofMax === Infinity) ? '∞' : (cam.dofMax + 'm');
+        } else {
+            dofChip.style.display = 'none';
+        }
+
+        const audioChip = document.getElementById('chipAudio');
+        if (c.audio_pickup_range && !c.audio_pickup_range.includes("N/A")) {
+            audioChip.style.display = 'flex';
+            document.getElementById('audioDisplay').innerText = c.audio_pickup_range;
+        } else {
+            audioChip.style.display = 'none';
+        }
+    }
 
     function buildDropdown() {
         const scroll = document.getElementById('camScroll');
@@ -651,13 +732,16 @@
                     <div class="cam-dd-dot"></div>
                     <span class="cam-dd-name">${c.name}</span>
                 </div>
-                <span class="cam-dd-fov">${c.fov}°</span>
+                <span class="cam-dd-fov">${c.hfov}°</span>
             `;
             item.addEventListener('click', () => {
                 selectedCamIdx = i;
-                cam.fov = c.fov;
-                updateFovChip();
+                cam.hfov = c.hfov;
+                cam.dofMax = parseDoFMax(c.dof);
+                cam.audioRadius = parseAudio(c.audio_pickup_range);
+                updateChips(c);
                 updateChairsAndDraw();
+                
                 ddText.textContent = c.name;
                 scroll.querySelectorAll('.cam-dd-item').forEach((el, j) => {
                     el.classList.toggle('active', j === i);
@@ -667,10 +751,8 @@
             scroll.appendChild(item);
         });
 
-        // Set initial label
         ddText.textContent = cameras[selectedCamIdx].name;
 
-        // Toggle open/close
         trigger.addEventListener('click', (e) => {
             e.stopPropagation();
             dropdown.classList.toggle('open');
@@ -686,8 +768,11 @@
     function init() {
         buildDropdown();
 
-        cam.fov = cameras[selectedCamIdx].fov;
-        updateFovChip();
+        const initialCam = cameras[selectedCamIdx];
+        cam.hfov = initialCam.hfov;
+        cam.dofMax = parseDoFMax(initialCam.dof);
+        cam.audioRadius = parseAudio(initialCam.audio_pickup_range);
+        updateChips(initialCam);
 
         rotSlider.addEventListener('input', (e) => {
             cam.rot = parseInt(e.target.value);
@@ -699,16 +784,63 @@
             document.getElementById(id).addEventListener('input', readInputs);
         });
 
+        // Resize Handling
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        centerRoom();
+
+        // Mouse/Touch Events
         canvas.addEventListener('pointerdown', onPointerDown);
         canvas.addEventListener('pointermove', onPointerMove);
         canvas.addEventListener('pointerup', onPointerUp);
         canvas.addEventListener('pointerleave', onPointerUp);
+        
+        // Wheel Zoom Event
+        canvas.addEventListener('wheel', onWheel, { passive: false });
+
+        // Controls
+        document.getElementById('btnZoomIn').addEventListener('click', () => zoomBy(1.2));
+        document.getElementById('btnZoomOut').addEventListener('click', () => zoomBy(1 / 1.2));
+        document.getElementById('btnResetView').addEventListener('click', centerRoom);
 
         readInputs();
     }
 
-    function updateFovChip() {
-        document.getElementById('fovDisplay').innerText = cam.fov + '°';
+    function resizeCanvas() {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        draw();
+    }
+
+    function centerRoom() {
+        scale = 1.0;
+        offsetX = (canvas.width - RULER - room.w * PPM) / 2;
+        offsetY = (canvas.height - RULER - room.h * PPM) / 2;
+        updateZoomDisplay();
+        draw();
+    }
+
+    function zoomBy(factor) {
+        let newScale = scale * factor;
+        newScale = Math.max(0.2, Math.min(newScale, 5));
+        
+        // Zoom towards center of screen
+        const cx = (canvas.width + RULER) / 2;
+        const cy = (canvas.height + RULER) / 2;
+        
+        const wx = (cx - RULER - offsetX) / (PPM * scale);
+        const wy = (cy - RULER - offsetY) / (PPM * scale);
+
+        offsetX = cx - RULER - wx * PPM * newScale;
+        offsetY = cy - RULER - wy * PPM * newScale;
+        scale = newScale;
+        
+        updateZoomDisplay();
+        draw();
+    }
+
+    function updateZoomDisplay() {
+        document.getElementById('zoomDisplay').innerText = Math.round(scale * 100) + '%';
     }
 
     function readInputs() {
@@ -716,9 +848,6 @@
         room.h = parseFloat(document.getElementById('roomH').value) || 5.4;
         table.w = parseFloat(document.getElementById('tableW').value) || 1.4;
         table.h = parseFloat(document.getElementById('tableH').value) || 2.4;
-
-        canvas.width = room.w * PPM + RULER;
-        canvas.height = room.h * PPM + RULER;
 
         document.getElementById('roomDimDisplay').innerText = `${room.w} × ${room.h} מ׳`;
         document.getElementById('tableDimDisplay').innerText = `${table.w} × ${table.h} מ׳`;
@@ -743,11 +872,20 @@
     function checkFovCoverage(px, py) {
         let dx = px - cam.x;
         let dy = py - cam.y;
+        let dist = Math.hypot(dx, dy);
+
         let angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
         if (angleDeg < 0) angleDeg += 360;
         let diff = (angleDeg - cam.rot + 180) % 360 - 180;
         let finalDiff = diff < -180 ? diff + 360 : diff;
-        return Math.abs(finalDiff) <= cam.fov / 2;
+        let inFov = Math.abs(finalDiff) <= cam.hfov / 2;
+
+        let inDof = true;
+        if (cam.dofMax && cam.dofMax !== Infinity) {
+            inDof = dist <= cam.dofMax;
+        }
+
+        return inFov && inDof;
     }
 
     function updateChairsAndDraw() {
@@ -764,13 +902,10 @@
         metricEl.innerText = `${pct}%`;
         document.getElementById('ringLabel').innerText = `${pct}%`;
 
-        // Update ring
         const circ = 169.6;
-        const offset = circ * (1 - pct / 100);
         const ring = document.getElementById('coverageRing');
-        ring.style.strokeDashoffset = offset;
+        ring.style.strokeDashoffset = circ * (1 - pct / 100);
 
-        // Color logic
         metricEl.className = 'stats-pct';
         if (pct === 100) {
             metricEl.classList.add('s-perfect');
@@ -786,70 +921,114 @@
         draw();
     }
 
-    /* ─── DRAG ─── */
+    /* ─── INTERACTIONS ─── */
+    function onWheel(e) {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+
+        if (mx < RULER || my < RULER) return;
+
+        const zoomIntensity = 0.002;
+        const delta = -e.deltaY * zoomIntensity;
+        let newScale = scale * Math.exp(delta);
+        newScale = Math.max(0.2, Math.min(newScale, 5));
+
+        const wx = (mx - RULER - offsetX) / (PPM * scale);
+        const wy = (my - RULER - offsetY) / (PPM * scale);
+
+        offsetX = mx - RULER - wx * PPM * newScale;
+        offsetY = my - RULER - wy * PPM * newScale;
+        scale = newScale;
+
+        updateZoomDisplay();
+        draw();
+    }
+
     function onPointerDown(e) {
         const rect = canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left;
         const my = e.clientY - rect.top;
-        const mouseXInMeters = (mx - RULER) / PPM;
-        const mouseYInMeters = (my - RULER) / PPM;
+        lastMouse = { x: mx, y: my };
 
-        const camPX = cam.x * PPM + RULER;
-        const camPY = cam.y * PPM + RULER;
-        if (Math.hypot(mx - camPX, my - camPY) < 25) {
+        if (mx < RULER || my < RULER) return;
+
+        const wx = (mx - RULER - offsetX) / (PPM * scale);
+        const wy = (my - RULER - offsetY) / (PPM * scale);
+
+        const camPx = RULER + offsetX + cam.x * PPM * scale;
+        const camPy = RULER + offsetY + cam.y * PPM * scale;
+        if (Math.hypot(mx - camPx, my - camPy) < 25) {
             dragTarget = 'cam';
             canvas.setPointerCapture(e.pointerId);
             return;
         }
 
-        const tX = table.x * PPM + RULER;
-        const tY = table.y * PPM + RULER;
-        const tW = table.w * PPM;
-        const tH = table.h * PPM;
+        const tX = RULER + offsetX + table.x * PPM * scale;
+        const tY = RULER + offsetY + table.y * PPM * scale;
+        const tW = table.w * PPM * scale;
+        const tH = table.h * PPM * scale;
         if (mx > tX - tW / 2 && mx < tX + tW / 2 && my > tY - tH / 2 && my < tY + tH / 2) {
             dragTarget = 'table';
-            dragOffset.x = mouseXInMeters - table.x;
-            dragOffset.y = mouseYInMeters - table.y;
+            dragOffset.x = wx - table.x;
+            dragOffset.y = wy - table.y;
             canvas.setPointerCapture(e.pointerId);
+            return;
         }
+
+        isPanning = true;
+        canvas.setPointerCapture(e.pointerId);
     }
 
     function onPointerMove(e) {
         const rect = canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left;
         const my = e.clientY - rect.top;
+        const dx = mx - lastMouse.x;
+        const dy = my - lastMouse.y;
+        lastMouse = { x: mx, y: my };
 
-        const camPX = cam.x * PPM + RULER;
-        const camPY = cam.y * PPM + RULER;
-        const tX = table.x * PPM + RULER;
-        const tY = table.y * PPM + RULER;
-        const tW = table.w * PPM;
-        const tH = table.h * PPM;
+        const camPx = RULER + offsetX + cam.x * PPM * scale;
+        const camPy = RULER + offsetY + cam.y * PPM * scale;
+        const tX = RULER + offsetX + table.x * PPM * scale;
+        const tY = RULER + offsetY + table.y * PPM * scale;
+        const tW = table.w * PPM * scale;
+        const tH = table.h * PPM * scale;
 
-        if (Math.hypot(mx - camPX, my - camPY) < 25 ||
-            (mx > tX - tW / 2 && mx < tX + tW / 2 && my > tY - tH / 2 && my < tY + tH / 2)) {
+        if (dragTarget || isPanning) {
+            canvas.style.cursor = 'grabbing';
+        } else if (Math.hypot(mx - camPx, my - camPy) < 25 ||
+                   (mx > tX - tW / 2 && mx < tX + tW / 2 && my > tY - tH / 2 && my < tY + tH / 2)) {
             canvas.style.cursor = 'grab';
         } else {
             canvas.style.cursor = 'default';
         }
 
-        if (!dragTarget) return;
-        canvas.style.cursor = 'grabbing';
+        if (isPanning) {
+            offsetX += dx;
+            offsetY += dy;
+            draw();
+            return;
+        }
 
-        const mouseXInMeters = (mx - RULER) / PPM;
-        const mouseYInMeters = (my - RULER) / PPM;
+        if (!dragTarget) return;
+
+        const wx = (mx - RULER - offsetX) / (PPM * scale);
+        const wy = (my - RULER - offsetY) / (PPM * scale);
 
         if (dragTarget === 'cam') {
-            cam.x = Math.max(0, Math.min(room.w, mouseXInMeters));
-            cam.y = Math.max(0, Math.min(room.h, mouseYInMeters));
+            cam.x = Math.max(0, Math.min(room.w, wx));
+            cam.y = Math.max(0, Math.min(room.h, wy));
         } else if (dragTarget === 'table') {
-            table.x = Math.max(table.w / 2, Math.min(room.w - table.w / 2, mouseXInMeters - dragOffset.x));
-            table.y = Math.max(table.h / 2, Math.min(room.h - table.h / 2, mouseYInMeters - dragOffset.y));
+            table.x = Math.max(table.w / 2, Math.min(room.w - table.w / 2, wx - dragOffset.x));
+            table.y = Math.max(table.h / 2, Math.min(room.h - table.h / 2, wy - dragOffset.y));
         }
         updateChairsAndDraw();
     }
 
     function onPointerUp(e) {
+        isPanning = false;
         if (dragTarget) {
             canvas.releasePointerCapture(e.pointerId);
             dragTarget = null;
@@ -861,117 +1040,200 @@
         ctx.fillStyle = '#0D1117';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        drawGrid();
+        const minW_X = -offsetX / (PPM * scale);
+        const maxW_X = (canvas.width - RULER - offsetX) / (PPM * scale);
+        const minW_Y = -offsetY / (PPM * scale);
+        const maxW_Y = (canvas.height - RULER - offsetY) / (PPM * scale);
+
+        drawGrid(minW_X, maxW_X, minW_Y, maxW_Y);
+
+        ctx.save();
+        ctx.rect(RULER, RULER, canvas.width - RULER, canvas.height - RULER);
+        ctx.clip();
+        ctx.translate(RULER + offsetX, RULER + offsetY);
+        ctx.scale(scale, scale);
+
+        // Draw Room Boundary Box
+        ctx.fillStyle = 'rgba(255,255,255,0.015)';
+        ctx.fillRect(0, 0, room.w * PPM, room.h * PPM);
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 1.5 / scale;
+        ctx.setLineDash([5 / scale, 5 / scale]);
+        ctx.strokeRect(0, 0, room.w * PPM, room.h * PPM);
+        ctx.setLineDash([]);
+
         drawFOV();
         drawTableAndChairs();
         drawCamera();
-        drawRulers();
+        
+        ctx.restore();
+
+        drawRulers(minW_X, maxW_X, minW_Y, maxW_Y);
     }
 
-    function drawGrid() {
+    function drawGrid(minX, maxX, minY, maxY) {
+        ctx.save();
+        ctx.rect(RULER, RULER, canvas.width - RULER, canvas.height - RULER);
+        ctx.clip();
+
+        // 0.6m lines
         ctx.strokeStyle = 'rgba(255,255,255,0.028)';
         ctx.lineWidth = 1;
-        const step = 0.6 * PPM;
-        for (let x = RULER; x <= canvas.width; x += step) {
-            ctx.beginPath(); ctx.moveTo(x, RULER); ctx.lineTo(x, canvas.height); ctx.stroke();
+        ctx.beginPath();
+        let startGridX = Math.floor(minX / 0.6) * 0.6;
+        for(let wx = startGridX; wx <= maxX; wx += 0.6) {
+            let sx = RULER + offsetX + wx * PPM * scale;
+            ctx.moveTo(sx, RULER); ctx.lineTo(sx, canvas.height);
         }
-        for (let y = RULER; y <= canvas.height; y += step) {
-            ctx.beginPath(); ctx.moveTo(RULER, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        let startGridY = Math.floor(minY / 0.6) * 0.6;
+        for(let wy = startGridY; wy <= maxY; wy += 0.6) {
+            let sy = RULER + offsetY + wy * PPM * scale;
+            ctx.moveTo(RULER, sy); ctx.lineTo(canvas.width, sy);
         }
-        // Meter grid (brighter)
+        ctx.stroke();
+        
+        // 1.2m lines
         ctx.strokeStyle = 'rgba(255,255,255,0.055)';
-        const mStep = 1.0 * PPM;
-        for (let x = RULER; x <= canvas.width; x += mStep) {
-            ctx.beginPath(); ctx.moveTo(x, RULER); ctx.lineTo(x, canvas.height); ctx.stroke();
+        ctx.beginPath();
+        let startGridX2 = Math.floor(minX / 1.2) * 1.2;
+        for(let wx = startGridX2; wx <= maxX; wx += 1.2) {
+            let sx = RULER + offsetX + wx * PPM * scale;
+            ctx.moveTo(sx, RULER); ctx.lineTo(sx, canvas.height);
         }
-        for (let y = RULER; y <= canvas.height; y += mStep) {
-            ctx.beginPath(); ctx.moveTo(RULER, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        let startGridY2 = Math.floor(minY / 1.2) * 1.2;
+        for(let wy = startGridY2; wy <= maxY; wy += 1.2) {
+            let sy = RULER + offsetY + wy * PPM * scale;
+            ctx.moveTo(RULER, sy); ctx.lineTo(canvas.width, sy);
         }
+        ctx.stroke();
+
+        ctx.restore();
     }
 
-    function drawRulers() {
-        // Backgrounds
+    function drawRulers(minX, maxX, minY, maxY) {
         ctx.fillStyle = '#121820';
         ctx.fillRect(0, 0, canvas.width, RULER);
         ctx.fillRect(0, 0, RULER, canvas.height);
 
-        // Corner block
         ctx.fillStyle = '#0D1117';
         ctx.fillRect(0, 0, RULER, RULER);
 
-        // Ruler border
         ctx.strokeStyle = 'rgba(255,255,255,0.07)';
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(RULER, 0); ctx.lineTo(RULER, canvas.height); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(0, RULER); ctx.lineTo(canvas.width, RULER); ctx.stroke();
 
+        // Origin Arrows
+        if (offsetX > 0 && offsetY > 0) {
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.font = '10px "JetBrains Mono", monospace';
+            
+            ctx.beginPath(); ctx.moveTo(RULER, RULER); ctx.lineTo(RULER + 12, RULER); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(RULER + 12, RULER); ctx.lineTo(RULER + 8, RULER - 3); ctx.lineTo(RULER + 8, RULER + 3); ctx.fill();
+            ctx.fillText("X", RULER + 20, RULER + 3);
+
+            ctx.beginPath(); ctx.moveTo(RULER, RULER); ctx.lineTo(RULER, RULER + 12); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(RULER, RULER + 12); ctx.lineTo(RULER - 3, RULER + 8); ctx.lineTo(RULER + 3, RULER + 8); ctx.fill();
+            ctx.fillText("Y", RULER + 8, RULER + 22);
+        }
+
         ctx.fillStyle = '#6B7588';
         ctx.font = '10px "JetBrains Mono", monospace';
-
-        // X ruler
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        for (let x = 0; x <= room.w; x += 0.6) {
-            let px = x * PPM + RULER;
+
+        // X Ruler
+        let startX = Math.floor(minX / 0.6) * 0.6;
+        for(let wx = startX; wx <= maxX; wx += 0.6) {
+            let px = RULER + offsetX + wx * PPM * scale;
+            if (px < RULER) continue;
+            
             ctx.strokeStyle = 'rgba(255,255,255,0.15)';
             ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(px, RULER - 6); ctx.lineTo(px, RULER); ctx.stroke();
-            if (x % 1.2 < 0.01 || Math.abs(x % 1.2 - 1.2) < 0.01) {
-                ctx.fillText(x.toFixed(1), px, RULER / 2);
+            
+            if (Math.abs(wx % 1.2) < 0.01 || Math.abs(Math.abs(wx % 1.2) - 1.2) < 0.01 || Math.abs(wx) < 0.01) {
+                ctx.fillText(Math.abs(wx) < 0.01 ? "0.0" : wx.toFixed(1), px, RULER / 2);
             }
         }
 
-        // Y ruler
+        // Y Ruler
         ctx.textAlign = 'right';
-        for (let y = 0; y <= room.h; y += 0.6) {
-            let py = y * PPM + RULER;
+        let startY = Math.floor(minY / 0.6) * 0.6;
+        for(let wy = startY; wy <= maxY; wy += 0.6) {
+            let py = RULER + offsetY + wy * PPM * scale;
+            if (py < RULER) continue;
+
             ctx.strokeStyle = 'rgba(255,255,255,0.15)';
             ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(RULER - 6, py); ctx.lineTo(RULER, py); ctx.stroke();
-            if (y % 1.2 < 0.01 || Math.abs(y % 1.2 - 1.2) < 0.01) {
-                ctx.fillText(y.toFixed(1), RULER - 9, py);
+            
+            if (Math.abs(wy % 1.2) < 0.01 || Math.abs(Math.abs(wy % 1.2) - 1.2) < 0.01 || Math.abs(wy) < 0.01) {
+                ctx.fillText(Math.abs(wy) < 0.01 ? "0.0" : wy.toFixed(1), RULER - 9, py);
             }
         }
     }
 
     function drawFOV() {
-        const cx = cam.x * PPM + RULER;
-        const cy = cam.y * PPM + RULER;
-        const r = 2000;
+        const cx = cam.x * PPM;
+        const cy = cam.y * PPM;
+        const rDefault = 2000;
         const angleRad = (cam.rot * Math.PI) / 180;
-        const fovRad = (cam.fov * Math.PI) / 180;
+        const fovRad = (cam.hfov * Math.PI) / 180;
         const startAngle = angleRad - fovRad / 2;
         const endAngle = angleRad + fovRad / 2;
 
-        // FOV fill with gradient
-        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 550);
-        grad.addColorStop(0, 'rgba(25,103,210,0.28)');
-        grad.addColorStop(0.4, 'rgba(59,130,246,0.10)');
-        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        if (cam.audioRadius) {
+            const ar = cam.audioRadius * PPM;
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.04)'; 
+            ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
+            ctx.lineWidth = 1.5 / scale;
+            ctx.setLineDash([8 / scale, 6 / scale]);
+            ctx.beginPath();
+            
+            const arcStart = angleRad - Math.PI/2;
+            const arcEnd = angleRad + Math.PI/2;
+            
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, ar, arcStart, arcEnd);
+            ctx.closePath();
+            
+            ctx.fill();
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
 
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, r, startAngle, endAngle);
-        ctx.closePath();
-        ctx.fill();
+        if (cam.dofMax) {
+            const dofMaxPx = cam.dofMax === Infinity ? 30 * PPM : cam.dofMax * PPM; 
+            const visualMax = Math.min(dofMaxPx, 30 * PPM);
 
-        // FOV edge lines
+            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, visualMax);
+            grad.addColorStop(0, 'rgba(25,103,210,0.3)');
+            grad.addColorStop(1, 'rgba(25,103,210,0)');
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, dofMaxPx, startAngle, endAngle);
+            ctx.closePath();
+            ctx.fill();
+        }
+
         ctx.strokeStyle = 'rgba(59,130,246,0.45)';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([6, 5]);
+        ctx.lineWidth = 1.5 / scale;
+        ctx.setLineDash([6 / scale, 5 / scale]);
         ctx.beginPath();
-        ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(startAngle) * r, cy + Math.sin(startAngle) * r);
-        ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(endAngle) * r, cy + Math.sin(endAngle) * r);
+        ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(startAngle) * rDefault, cy + Math.sin(startAngle) * rDefault);
+        ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(endAngle) * rDefault, cy + Math.sin(endAngle) * rDefault);
         ctx.stroke();
         ctx.setLineDash([]);
     }
 
     function drawTableAndChairs() {
-        // Chairs
         chairs.forEach(c => {
-            const cx = c.x * PPM + RULER;
-            const cy = c.y * PPM + RULER;
+            const cx = c.x * PPM;
+            const cy = c.y * PPM;
             ctx.save();
             ctx.translate(cx, cy);
             ctx.rotate((c.angle * Math.PI) / 180);
@@ -984,7 +1246,7 @@
                 ctx.fillStyle = 'rgba(239,68,68,0.05)';
             }
 
-            ctx.lineWidth = 1.8;
+            ctx.lineWidth = 1.8 / scale;
             ctx.beginPath();
             ctx.roundRect(-15, -15, 30, 30, 5);
             ctx.fill();
@@ -993,19 +1255,14 @@
             const sColor  = c.inside ? 'rgba(16,185,129,0.85)' : 'rgba(239,68,68,0.5)';
             const sFill   = c.inside ? 'rgba(16,185,129,0.13)' : 'rgba(239,68,68,0.06)';
 
-            // ── Seat (square, center) ──
             ctx.fillStyle   = sFill;
             ctx.strokeStyle = sColor;
-            ctx.lineWidth   = 1.8;
+            ctx.lineWidth   = 1.8 / scale;
             ctx.beginPath();
             ctx.roundRect(-11, -11, 22, 22, 4);
             ctx.fill();
             ctx.stroke();
 
-            // ── Chair back: thick bar on the −x side (away from table) ──
-            // With angle=0  → back faces left,  opening faces right (toward table) ✓
-            // With angle=180 → back faces right, opening faces left  (toward table) ✓
-            // With angle=270 → back faces down,  opening faces up    (toward camera) ✓
             ctx.fillStyle = sColor;
             ctx.beginPath();
             ctx.roundRect(-16, -11, 6, 22, 3);
@@ -1014,51 +1271,51 @@
             ctx.restore();
         });
 
-        // Table
-        const tx = (table.x - table.w / 2) * PPM + RULER;
-        const ty = (table.y - table.h / 2) * PPM + RULER;
+        const tx = (table.x - table.w / 2) * PPM;
+        const ty = (table.y - table.h / 2) * PPM;
         const tw = table.w * PPM;
         const th = table.h * PPM;
 
         ctx.fillStyle = 'rgba(139,92,246,0.10)';
         ctx.strokeStyle = 'rgba(139,92,246,0.7)';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2 / scale;
         ctx.beginPath();
         ctx.roundRect(tx, ty, tw, th, 10);
         ctx.fill();
         ctx.stroke();
 
-        // Table label
+        ctx.save();
+        ctx.translate(tx + tw / 2, ty + th / 2);
         ctx.fillStyle = 'rgba(196,181,253,0.85)';
+        // גודל הטקסט נשאר סטטי על המסך ע"י ביטול הסקייל הנוכחי
+        ctx.scale(1/scale, 1/scale);
         ctx.font = 'bold 12px "JetBrains Mono", monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(`${table.w}m × ${table.h}m`, tx + tw / 2, ty + th / 2);
+        ctx.fillText(`${table.w}m × ${table.h}m`, 0, 0);
+        ctx.restore();
     }
 
     function drawCamera() {
-        const cx = cam.x * PPM + RULER;
-        const cy = cam.y * PPM + RULER;
+        const cx = cam.x * PPM;
+        const cy = cam.y * PPM;
 
-        // Outer ring pulse
         ctx.strokeStyle = 'rgba(59,130,246,0.2)';
-        ctx.lineWidth = 8;
+        ctx.lineWidth = 8 / scale;
         ctx.beginPath();
         ctx.arc(cx, cy, 18, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Body
         ctx.fillStyle = '#1967D2';
         ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2 / scale;
         ctx.beginPath();
         ctx.arc(cx, cy, 11, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
 
-        // Direction indicator
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 2.5 / scale;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(cx, cy);
