@@ -467,7 +467,7 @@
             </svg>
         </div>
         <span class="brand-name">AV Space Planner</span>
-        <span class="brand-version">v2.1</span>
+        <span class="brand-version">v2.2</span>
     </div>
 
     <div class="topbar-divider"></div>
@@ -569,7 +569,7 @@
                     <div class="sec-icon si-green">
                         <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M6 7V5M18 7V5M6 17v2M18 17v2"/></svg>
                     </div>
-                    <span class="sec-title">מידות השולחן</span>
+                    <span class="sec-title">מידות ומיקום השולחן</span>
                 </div>
                 <div class="field-grid">
                     <div class="field">
@@ -579,6 +579,10 @@
                     <div class="field">
                         <label class="fl">אורך שולחן (מ׳)</label>
                         <input type="number" class="fi" id="tableH" value="2.4" step="0.1" min="0.5">
+                    </div>
+                    <div class="field" style="grid-column: 1 / -1;">
+                        <label class="fl">מרחק קצה שולחן מקיר קדמי (מ׳)</label>
+                        <input type="number" class="fi" id="tableDist" value="1.8" step="0.1" min="0">
                     </div>
                 </div>
             </div>
@@ -780,7 +784,7 @@
             updateChairsAndDraw();
         });
 
-        ['roomW', 'roomH', 'tableW', 'tableH'].forEach(id => {
+        ['roomW', 'roomH', 'tableW', 'tableH', 'tableDist'].forEach(id => {
             document.getElementById(id).addEventListener('input', readInputs);
         });
 
@@ -843,11 +847,17 @@
         document.getElementById('zoomDisplay').innerText = Math.round(scale * 100) + '%';
     }
 
-    function readInputs() {
+    function readInputs(e) {
         room.w = parseFloat(document.getElementById('roomW').value) || 4.8;
         room.h = parseFloat(document.getElementById('roomH').value) || 5.4;
         table.w = parseFloat(document.getElementById('tableW').value) || 1.4;
         table.h = parseFloat(document.getElementById('tableH').value) || 2.4;
+        
+        // מעדכנים את מיקום השולחן לפי המרחק רק אם זה נטען הרגע או שהאירוע הגיע מהשדה
+        if (!e || e.target.id === 'tableDist' || e.target.id === 'tableH') {
+            let tDist = parseFloat(document.getElementById('tableDist').value) || 0;
+            table.y = tDist + table.h / 2;
+        }
 
         document.getElementById('roomDimDisplay').innerText = `${room.w} × ${room.h} מ׳`;
         document.getElementById('tableDimDisplay').innerText = `${table.w} × ${table.h} מ׳`;
@@ -1023,6 +1033,8 @@
         } else if (dragTarget === 'table') {
             table.x = Math.max(table.w / 2, Math.min(room.w - table.w / 2, wx - dragOffset.x));
             table.y = Math.max(table.h / 2, Math.min(room.h - table.h / 2, wy - dragOffset.y));
+            // מעדכנים את שדה הקלט כשהמשתמש גורר את השולחן
+            document.getElementById('tableDist').value = Math.max(0, table.y - table.h / 2).toFixed(2);
         }
         updateChairsAndDraw();
     }
@@ -1076,32 +1088,32 @@
         ctx.rect(RULER, RULER, canvas.width - RULER, canvas.height - RULER);
         ctx.clip();
 
-        // 0.6m lines
+        // 0.5m lines
         ctx.strokeStyle = 'rgba(255,255,255,0.028)';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        let startGridX = Math.floor(minX / 0.6) * 0.6;
-        for(let wx = startGridX; wx <= maxX; wx += 0.6) {
+        let startGridX = Math.floor(minX / 0.5) * 0.5;
+        for(let wx = startGridX; wx <= maxX; wx += 0.5) {
             let sx = RULER + offsetX + wx * PPM * scale;
             ctx.moveTo(sx, RULER); ctx.lineTo(sx, canvas.height);
         }
-        let startGridY = Math.floor(minY / 0.6) * 0.6;
-        for(let wy = startGridY; wy <= maxY; wy += 0.6) {
+        let startGridY = Math.floor(minY / 0.5) * 0.5;
+        for(let wy = startGridY; wy <= maxY; wy += 0.5) {
             let sy = RULER + offsetY + wy * PPM * scale;
             ctx.moveTo(RULER, sy); ctx.lineTo(canvas.width, sy);
         }
         ctx.stroke();
         
-        // 1.2m lines
+        // 1.0m lines
         ctx.strokeStyle = 'rgba(255,255,255,0.055)';
         ctx.beginPath();
-        let startGridX2 = Math.floor(minX / 1.2) * 1.2;
-        for(let wx = startGridX2; wx <= maxX; wx += 1.2) {
+        let startGridX2 = Math.floor(minX / 1.0) * 1.0;
+        for(let wx = startGridX2; wx <= maxX; wx += 1.0) {
             let sx = RULER + offsetX + wx * PPM * scale;
             ctx.moveTo(sx, RULER); ctx.lineTo(sx, canvas.height);
         }
-        let startGridY2 = Math.floor(minY / 1.2) * 1.2;
-        for(let wy = startGridY2; wy <= maxY; wy += 1.2) {
+        let startGridY2 = Math.floor(minY / 1.0) * 1.0;
+        for(let wy = startGridY2; wy <= maxY; wy += 1.0) {
             let sy = RULER + offsetY + wy * PPM * scale;
             ctx.moveTo(RULER, sy); ctx.lineTo(canvas.width, sy);
         }
@@ -1144,8 +1156,8 @@
         ctx.textBaseline = 'middle';
 
         // X Ruler
-        let startX = Math.floor(minX / 0.6) * 0.6;
-        for(let wx = startX; wx <= maxX; wx += 0.6) {
+        let startX = Math.floor(minX / 0.5) * 0.5;
+        for(let wx = startX; wx <= maxX; wx += 0.5) {
             let px = RULER + offsetX + wx * PPM * scale;
             if (px < RULER) continue;
             
@@ -1153,15 +1165,15 @@
             ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(px, RULER - 6); ctx.lineTo(px, RULER); ctx.stroke();
             
-            if (Math.abs(wx % 1.2) < 0.01 || Math.abs(Math.abs(wx % 1.2) - 1.2) < 0.01 || Math.abs(wx) < 0.01) {
+            if (Math.abs(wx % 1.0) < 0.01 || Math.abs(Math.abs(wx % 1.0) - 1.0) < 0.01 || Math.abs(wx) < 0.01) {
                 ctx.fillText(Math.abs(wx) < 0.01 ? "0.0" : wx.toFixed(1), px, RULER / 2);
             }
         }
 
         // Y Ruler
         ctx.textAlign = 'right';
-        let startY = Math.floor(minY / 0.6) * 0.6;
-        for(let wy = startY; wy <= maxY; wy += 0.6) {
+        let startY = Math.floor(minY / 0.5) * 0.5;
+        for(let wy = startY; wy <= maxY; wy += 0.5) {
             let py = RULER + offsetY + wy * PPM * scale;
             if (py < RULER) continue;
 
@@ -1169,7 +1181,7 @@
             ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(RULER - 6, py); ctx.lineTo(RULER, py); ctx.stroke();
             
-            if (Math.abs(wy % 1.2) < 0.01 || Math.abs(Math.abs(wy % 1.2) - 1.2) < 0.01 || Math.abs(wy) < 0.01) {
+            if (Math.abs(wy % 1.0) < 0.01 || Math.abs(Math.abs(wy % 1.0) - 1.0) < 0.01 || Math.abs(wy) < 0.01) {
                 ctx.fillText(Math.abs(wy) < 0.01 ? "0.0" : wy.toFixed(1), RULER - 9, py);
             }
         }
