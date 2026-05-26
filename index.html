@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>AV Space Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary: #1967D2;
+            --primary-bg: rgba(25,103,210,0.08);
+            --primary-ring: rgba(25,103,210,0.2);
+            --green: #137333;
+            --green-bg: rgba(19,115,51,0.09);
+            --red: #C5221F;
+            --red-bg: rgba(197,34,31,0.08);
+            --amber: #E37400;
+            --amber-bg: rgba(227,116,0,0.09);
+            --text-1: #202124;
+            --text-2: #5F6368;
+            --text-3: #9AA0A6;
+            --surface: #FFFFFF;
+            --surface-2: #F8F9FA;
+            --surface-3: #F1F3F4;
+            --border: rgba(0,0,0,0.09);
+            --border-med: rgba(0,0,0,0.14);
+            --topbar-bg: #161C2C;
+            --topbar-h: 56px;
+            --toolbar-h: 38px;
+            --sidebar-w: 348px;
+            --font: 'DM Sans', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-display: 'Syne', sans-serif;
+        }
+
+        html, body { height: 100%; overflow: hidden; }
+
+        body {
+            font-family: var(--font);
+            background: var(--surface-2);
+            color: var(--text-1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ─── TOP BAR ─── */
+        .topbar {
+            height: var(--topbar-h);
+            background: var(--topbar-bg);
+            display: flex;
+            align-items: center;
+            padding: 0 18px;
+            gap: 14px;
+            flex-shrink: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+            padding-left: 18px;
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .brand-icon {
+            width: 30px; height: 30px;
+            background: var(--primary);
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-family: var(--font-display);
+            font-size: 15px; font-weight: 700;
+            color: #fff; letter-spacing: -0.2px;
+            white-space: nowrap;
+        }
+
+        .brand-version {
+            font-size: 10px; font-weight: 500;
+            color: rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            padding: 2px 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .topbar-divider { width:1px; height:22px; background: rgba(255,255,255,0.1); }
+
+        .topbar-label {
+            font-size: 11px; font-weight: 500;
+            color: rgba(255,255,255,0.38);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        /* ─── CUSTOM DROPDOWN ─── */
+        .cam-dropdown {
+            flex: 1; max-width: 310px;
+            position: relative;
+        }
+
+        .cam-dd-trigger {
+            width: 100%; height: 34px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            color: #E8EDF8;
+            font-family: var(--font); font-size: 13px; font-weight: 400;
+            padding: 0 10px 0 32px;
+            cursor: pointer; outline: none;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 8px;
+            transition: background 0.15s, border-color 0.15s;
+            text-align: right;
+        }
+
+        .cam-dd-trigger:hover { background: rgba(255,255,255,0.09); }
+
+        .cam-dropdown.open .cam-dd-trigger {
+            border-color: rgba(25,103,210,0.65);
+            background: rgba(255,255,255,0.08);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .cam-dd-text {
+            flex: 1; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        .cam-dd-chevron {
+            flex-shrink: 0; width: 14px; height: 14px;
+            stroke: rgba(255,255,255,0.4); fill: none;
+            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+            transition: transform 0.2s ease;
+        }
+
+        .cam-dropdown.open .cam-dd-chevron { transform: rotate(180deg); }
+
+        .cam-dd-panel {
+            position: absolute;
+            top: 100%; right: 0; left: 0;
+            background: #1A2236;
+            border: 1px solid rgba(25,103,210,0.55);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            z-index: 9999;
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: max-height 0.22s ease, opacity 0.18s ease;
+        }
+
+        .cam-dropdown.open .cam-dd-panel {
+            max-height: 260px;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .cam-dd-scroll {
+            max-height: 260px;
+            overflow-y: auto;
+            padding: 4px 0;
+        }
+
+        .cam-dd-scroll::-webkit-scrollbar { width: 5px; }
+        .cam-dd-scroll::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.03);
+        }
+        .cam-dd-scroll::-webkit-scrollbar-thumb {
+            background: rgba(25,103,210,0.5);
+            border-radius: 10px;
+        }
+        .cam-dd-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(25,103,210,0.75);
+        }
+
+        .cam-dd-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 14px;
+            font-family: var(--font); font-size: 13px;
+            color: #C8D3EF;
+            cursor: pointer;
+            transition: background 0.1s;
+            gap: 10px;
+        }
+
+        .cam-dd-item:hover { background: rgba(255,255,255,0.06); color: #E8EDF8; }
+
+        .cam-dd-item.active {
+            background: rgba(25,103,210,0.22);
+            color: #8AB4F8;
+        }
+
+        .cam-dd-item-left {
+            display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden;
+        }
+
+        .cam-dd-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: transparent; flex-shrink: 0;
+            transition: background 0.15s;
+        }
+
+        .cam-dd-item.active .cam-dd-dot { background: #4A90D9; }
+
+        .cam-dd-name {
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        .cam-dd-fov {
+            font-family: var(--font-mono); font-size: 11px;
+            color: rgba(255,255,255,0.28); flex-shrink: 0;
+        }
+
+        .cam-dd-item.active .cam-dd-fov { color: rgba(138,180,248,0.65); }
+
+        .fov-chip {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(25,103,210,0.22);
+            border: 1px solid rgba(25,103,210,0.4);
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+            color: #8AB4F8;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+        }
+
+        .fov-chip-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #4A90D9;
+            box-shadow: 0 0 0 3px rgba(74,144,217,0.25);
+        }
+
+        /* ─── APP BODY ─── */
+        .app-body { flex: 1; display: flex; overflow: hidden; }
+
+        /* ─── CANVAS AREA ─── */
+        .canvas-area {
+            flex: 1; display: flex; flex-direction: column;
+            background: #0D1117; overflow: hidden;
+        }
+
+        .canvas-toolbar {
+            height: var(--toolbar-h);
+            background: #121820;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex; align-items: center;
+            padding: 0 16px; gap: 0;
+            flex-shrink: 0;
+        }
+
+        .ct-item {
+            display: flex; align-items: center; gap: 5px;
+            padding: 0 14px;
+            font-size: 11px; font-weight: 400;
+            font-family: var(--font-mono);
+            color: rgba(255,255,255,0.3);
+            border-right: 1px solid rgba(255,255,255,0.06);
+            height: 100%;
+        }
+
+        .ct-item:first-child { padding-right: 0; }
+        .ct-item:last-child { border-right: none; }
+
+        .ct-item strong {
+            font-weight: 500;
+            color: rgba(255,255,255,0.55);
+        }
+
+        .ct-spacer { flex: 1; }
+
+        .ct-hint {
+            font-size: 11px; color: rgba(255,255,255,0.22);
+            display: flex; align-items: center; gap: 8px;
+            padding: 0 6px;
+        }
+
+        .ct-hint-dot { width: 5px; height: 5px; border-radius: 50%; }
+
+        .canvas-scroll {
+            flex: 1; display: flex;
+            align-items: center; justify-content: center;
+            overflow: auto;
+            padding: 24px;
+        }
+
+        canvas { display: block; }
+
+        /* ─── SIDEBAR ─── */
+        .sidebar {
+            width: var(--sidebar-w); flex-shrink: 0;
+            background: var(--surface);
+            border-right: 1px solid var(--border-med);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-scroll {
+            flex: 1; overflow-y: auto; overflow-x: hidden;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar { width: 3px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border-med); border-radius: 3px; }
+
+        .sidebar-section {
+            padding: 18px 18px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sec-head {
+            display: flex; align-items: center; gap: 9px;
+            margin-bottom: 14px;
+        }
+
+        .sec-icon {
+            width: 26px; height: 26px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .si-blue { background: var(--primary-bg); }
+        .si-amber { background: var(--amber-bg); }
+        .si-green { background: var(--green-bg); }
+
+        .sec-icon svg { width: 14px; height: 14px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .si-blue svg { stroke: var(--primary); }
+        .si-amber svg { stroke: var(--amber); }
+        .si-green svg { stroke: var(--green); }
+
+        .sec-title { font-size: 12px; font-weight: 600; color: var(--text-1); letter-spacing: 0.1px; }
+
+        /* Fields */
+        .field { margin-bottom: 12px; }
+        .field:last-child { margin-bottom: 0; }
+
+        .fl { display: block; font-size: 11px; font-weight: 500; color: var(--text-2); margin-bottom: 5px; }
+
+        .fi {
+            width: 100%; height: 34px;
+            border: 1px solid var(--border-med);
+            border-radius: 7px; padding: 0 10px;
+            font-family: var(--font-mono); font-size: 13px; color: var(--text-1);
+            background: var(--surface-2);
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+
+        .fi:hover { border-color: var(--primary); background: var(--surface); }
+        .fi:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px var(--primary-ring); }
+
+        .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .field-grid .field { margin-bottom: 0; }
+
+        /* Rotation */
+        .rot-row { display: flex; align-items: center; gap: 10px; }
+
+        .rot-row input[type="range"] {
+            flex: 1; height: 4px; cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .rot-pill {
+            font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+            color: var(--primary); background: var(--primary-bg);
+            border-radius: 6px; padding: 4px 9px;
+            min-width: 46px; text-align: center;
+        }
+
+        /* ─── STATS PANEL ─── */
+        .stats-panel {
+            padding: 18px;
+            background: var(--surface);
+            border-top: 1px solid var(--border-med);
+            flex-shrink: 0;
+        }
+
+        .stats-headline {
+            font-size: 10px; font-weight: 600; letter-spacing: 0.7px;
+            text-transform: uppercase; color: var(--text-3);
+            margin-bottom: 14px;
+        }
+
+        .stats-main { display: flex; align-items: center; gap: 16px; }
+
+        .ring-wrap {
+            width: 68px; height: 68px; position: relative; flex-shrink: 0;
+        }
+
+        .ring-wrap svg { transform: rotate(-90deg); display: block; }
+
+        .ring-inner {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+            color: var(--text-2);
+        }
+
+        .stats-numbers { flex: 1; }
+
+        .stats-pct {
+            font-family: var(--font-display);
+            font-size: 30px; font-weight: 700; line-height: 1;
+            margin-bottom: 4px;
+            transition: color 0.3s;
+        }
+
+        .stat-label { font-size: 12px; color: var(--text-2); }
+
+        .s-perfect { color: var(--green); }
+        .s-good    { color: var(--primary); }
+        .s-low     { color: var(--red); }
+
+        /* Hints */
+        .hints { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+
+        .hint {
+            display: flex; align-items: flex-start; gap: 9px;
+            font-size: 11.5px; line-height: 1.5; color: var(--text-2);
+        }
+
+        .hd { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+
+        .hint b { font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<!-- ══ TOP BAR ══ -->
+<div class="topbar">
+    <div class="brand">
+        <div class="brand-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M15 6H9L6.5 9H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-2.5L15 6Z" fill="rgba(255,255,255,0.9)"/>
+                <circle cx="12" cy="14" r="4" fill="#1967D2"/>
+                <circle cx="12" cy="14" r="1.8" fill="white"/>
+            </svg>
+        </div>
+        <span class="brand-name">AV Space Planner</span>
+        <span class="brand-version">v2.0</span>
+    </div>
+
+    <div class="topbar-divider"></div>
+    <span class="topbar-label">דגם מצלמה / עדשה</span>
+
+    <div class="cam-dropdown" id="camDropdown">
+        <button class="cam-dd-trigger" id="camTrigger" type="button">
+            <span class="cam-dd-text" id="camDdText">טוען...</span>
+            <svg class="cam-dd-chevron" viewBox="0 0 24 24">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        </button>
+        <div class="cam-dd-panel" id="camPanel">
+            <div class="cam-dd-scroll" id="camScroll"></div>
+        </div>
+    </div>
+
+    <div class="fov-chip">
+        <div class="fov-chip-dot"></div>
+        FOV&nbsp;<span id="fovDisplay">110°</span>
+    </div>
+</div>
+
+<!-- ══ APP BODY ══ -->
+<div class="app-body">
+
+    <!-- Canvas -->
+    <div class="canvas-area">
+        <div class="canvas-toolbar">
+            <div class="ct-item">חדר:&nbsp;<strong id="roomDimDisplay">4.8 × 5.4 מ׳</strong></div>
+            <div class="ct-item">שולחן:&nbsp;<strong id="tableDimDisplay">1.4 × 2.4 מ׳</strong></div>
+            <div class="ct-spacer"></div>
+            <div class="ct-hint">
+                <div class="ct-hint-dot" style="background:#3B82F6"></div> גרור מצלמה
+                <div class="ct-hint-dot" style="background:#A78BFA; margin-right:4px"></div> גרור שולחן
+            </div>
+        </div>
+        <div class="canvas-scroll">
+            <canvas id="roomCanvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-scroll">
+
+            <!-- Camera rotation -->
+            <div class="sidebar-section">
+                <div class="sec-head">
+                    <div class="sec-icon si-blue">
+                        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 1 0 20"/><path d="M12 6v6l3 3"/></svg>
+                    </div>
+                    <span class="sec-title">כיוון מצלמה (סיבוב)</span>
+                </div>
+                <div class="field">
+                    <label class="fl">זווית</label>
+                    <div class="rot-row">
+                        <input type="range" id="camRotation" min="0" max="360" value="90">
+                        <span class="rot-pill" id="rotVal">90°</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Room -->
+            <div class="sidebar-section">
+                <div class="sec-head">
+                    <div class="sec-icon si-amber">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    </div>
+                    <span class="sec-title">מידות החדר</span>
+                </div>
+                <div class="field-grid">
+                    <div class="field">
+                        <label class="fl">רוחב – ציר X (מ׳)</label>
+                        <input type="number" class="fi" id="roomW" value="4.8" step="0.2" min="2">
+                    </div>
+                    <div class="field">
+                        <label class="fl">אורך – ציר Y (מ׳)</label>
+                        <input type="number" class="fi" id="roomH" value="5.4" step="0.2" min="2">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="sidebar-section">
+                <div class="sec-head">
+                    <div class="sec-icon si-green">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M6 7V5M18 7V5M6 17v2M18 17v2"/></svg>
+                    </div>
+                    <span class="sec-title">מידות השולחן</span>
+                </div>
+                <div class="field-grid">
+                    <div class="field">
+                        <label class="fl">רוחב שולחן (מ׳)</label>
+                        <input type="number" class="fi" id="tableW" value="1.4" step="0.1" min="0.5">
+                    </div>
+                    <div class="field">
+                        <label class="fl">אורך שולחן (מ׳)</label>
+                        <input type="number" class="fi" id="tableH" value="2.4" step="0.1" min="0.5">
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /sidebar-scroll -->
+
+        <!-- Stats panel pinned at bottom -->
+        <div class="stats-panel">
+            <div class="stats-headline">ניתוח כיסוי · Real-time</div>
+            <div class="stats-main">
+                <div class="ring-wrap">
+                    <svg width="68" height="68" viewBox="0 0 68 68">
+                        <circle cx="34" cy="34" r="27" fill="none" stroke="#E8EAED" stroke-width="7"/>
+                        <circle cx="34" cy="34" r="27" fill="none" stroke="#1967D2" stroke-width="7"
+                            stroke-dasharray="169.6" stroke-dashoffset="169.6"
+                            stroke-linecap="round" id="coverageRing"/>
+                    </svg>
+                    <div class="ring-inner" id="ringLabel">0%</div>
+                </div>
+                <div class="stats-numbers">
+                    <div class="stats-pct s-good" id="coverageMetric">0%</div>
+                    <div class="stat-label">כיסוי כיסאות ב-FOV</div>
+                </div>
+            </div>
+            <div class="hints">
+                <div class="hint">
+                    <div class="hd" style="background:#3B82F6"></div>
+                    <span>גרור את <b>המצלמה</b> (עיגול כחול) לאורך קיר</span>
+                </div>
+                <div class="hint">
+                    <div class="hd" style="background:#8B5CF6"></div>
+                    <span>גרור את <b>השולחן</b> לבחינת מרחקי עבודה</span>
+                </div>
+                <div class="hint">
+                    <div class="hd" style="background:#10B981"></div>
+                    <span><b style="color:#10B981">ירוק</b> = בתוך FOV &nbsp;·&nbsp; <b style="color:#EF4444">אדום</b> = מחוץ ל-FOV</span>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /sidebar -->
+</div><!-- /app-body -->
+
+<script>
+    const cameras = [
+        { name: "MeetingBar A10", fov: 105 },
+        { name: "MeetingBar A20", fov: 110 },
+        { name: "MeetingBar A25 (Wide)", fov: 151 },
+        { name: "MeetingBar A25 (Tele)", fov: 84.4 },
+        { name: "MeetingBar A30 (Wide)", fov: 112 },
+        { name: "MeetingBar A30 (Tele)", fov: 81 },
+        { name: "MeetingBar A40", fov: 110 },
+        { name: "MeetingBar A50 (Wide)", fov: 98 },
+        { name: "MeetingBar A50 (Tele)", fov: 41.6 },
+        { name: "SmartVision 40", fov: 110 },
+        { name: "SmartVision 80 (PTZ)", fov: 61.5 },
+        { name: "SmartVision 80 (Wide)", fov: 98 },
+        { name: "SmartVision 80 (Tele)", fov: 41.6 },
+        { name: "MTower (Wide)", fov: 151 },
+        { name: "MTower (Tele)", fov: 84.4 },
+        { name: "UVC85", fov: 80 },
+        { name: "UVC86 (Wide)", fov: 110 },
+        { name: "UVC86 (PTZ)", fov: 81 },
+        { name: "MeetingBoard (65/86)", fov: 110 },
+        { name: "MeetingBoard Pro/C EDLA", fov: 98.2 },
+        { name: "MB-12X Pro", fov: 80 },
+        { name: "MB-Camera-6X", fov: 80 },
+        { name: "MB-Camera-12X", fov: 90 },
+        { name: "UVC34 / UVC40 E2", fov: 120 },
+        { name: "DeskVision A24", fov: 83 }
+    ];
+
+    const RULER = 50;
+    const PPM = 90;
+
+    const canvas = document.getElementById('roomCanvas');
+    const ctx = canvas.getContext('2d');
+    const rotSlider = document.getElementById('camRotation');
+    const rotVal = document.getElementById('rotVal');
+
+    let room = { w: 4.8, h: 5.4 };
+    let table = { x: 2.4, y: 3.0, w: 1.4, h: 2.4 };
+    let cam = { x: 2.4, y: 0.1, rot: 90, fov: 110 };
+    let chairs = [];
+    let dragTarget = null;
+    let dragOffset = { x: 0, y: 0 };
+
+    // ── Custom Dropdown ──
+    let selectedCamIdx = 6; // MeetingBar A40
+
+    function buildDropdown() {
+        const scroll = document.getElementById('camScroll');
+        const trigger = document.getElementById('camTrigger');
+        const ddText = document.getElementById('camDdText');
+        const dropdown = document.getElementById('camDropdown');
+
+        cameras.forEach((c, i) => {
+            const item = document.createElement('div');
+            item.className = 'cam-dd-item' + (i === selectedCamIdx ? ' active' : '');
+            item.innerHTML = `
+                <div class="cam-dd-item-left">
+                    <div class="cam-dd-dot"></div>
+                    <span class="cam-dd-name">${c.name}</span>
+                </div>
+                <span class="cam-dd-fov">${c.fov}°</span>
+            `;
+            item.addEventListener('click', () => {
+                selectedCamIdx = i;
+                cam.fov = c.fov;
+                updateFovChip();
+                updateChairsAndDraw();
+                ddText.textContent = c.name;
+                scroll.querySelectorAll('.cam-dd-item').forEach((el, j) => {
+                    el.classList.toggle('active', j === i);
+                });
+                closeDropdown();
+            });
+            scroll.appendChild(item);
+        });
+
+        // Set initial label
+        ddText.textContent = cameras[selectedCamIdx].name;
+
+        // Toggle open/close
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('open');
+        });
+
+        document.addEventListener('click', closeDropdown);
+    }
+
+    function closeDropdown() {
+        document.getElementById('camDropdown').classList.remove('open');
+    }
+
+    function init() {
+        buildDropdown();
+
+        cam.fov = cameras[selectedCamIdx].fov;
+        updateFovChip();
+
+        rotSlider.addEventListener('input', (e) => {
+            cam.rot = parseInt(e.target.value);
+            rotVal.innerText = cam.rot + '°';
+            updateChairsAndDraw();
+        });
+
+        ['roomW', 'roomH', 'tableW', 'tableH'].forEach(id => {
+            document.getElementById(id).addEventListener('input', readInputs);
+        });
+
+        canvas.addEventListener('pointerdown', onPointerDown);
+        canvas.addEventListener('pointermove', onPointerMove);
+        canvas.addEventListener('pointerup', onPointerUp);
+        canvas.addEventListener('pointerleave', onPointerUp);
+
+        readInputs();
+    }
+
+    function updateFovChip() {
+        document.getElementById('fovDisplay').innerText = cam.fov + '°';
+    }
+
+    function readInputs() {
+        room.w = parseFloat(document.getElementById('roomW').value) || 4.8;
+        room.h = parseFloat(document.getElementById('roomH').value) || 5.4;
+        table.w = parseFloat(document.getElementById('tableW').value) || 1.4;
+        table.h = parseFloat(document.getElementById('tableH').value) || 2.4;
+
+        canvas.width = room.w * PPM + RULER;
+        canvas.height = room.h * PPM + RULER;
+
+        document.getElementById('roomDimDisplay').innerText = `${room.w} × ${room.h} מ׳`;
+        document.getElementById('tableDimDisplay').innerText = `${table.w} × ${table.h} מ׳`;
+
+        updateChairsAndDraw();
+    }
+
+    function generateChairs() {
+        chairs = [];
+        const chairSpacing = 0.65;
+        const sideChairsCount = Math.max(1, Math.floor(table.h / chairSpacing));
+        const startY = table.y - (sideChairsCount - 1) * chairSpacing / 2;
+
+        for (let i = 0; i < sideChairsCount; i++) {
+            let cy = startY + i * chairSpacing;
+            chairs.push({ x: table.x - table.w / 2 - 0.25, y: cy, angle: 0 });
+            chairs.push({ x: table.x + table.w / 2 + 0.25, y: cy, angle: 180 });
+        }
+        chairs.push({ x: table.x, y: table.y + table.h / 2 + 0.25, angle: 270 });
+    }
+
+    function checkFovCoverage(px, py) {
+        let dx = px - cam.x;
+        let dy = py - cam.y;
+        let angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+        if (angleDeg < 0) angleDeg += 360;
+        let diff = (angleDeg - cam.rot + 180) % 360 - 180;
+        let finalDiff = diff < -180 ? diff + 360 : diff;
+        return Math.abs(finalDiff) <= cam.fov / 2;
+    }
+
+    function updateChairsAndDraw() {
+        generateChairs();
+
+        let insideCount = 0;
+        chairs.forEach(c => {
+            c.inside = checkFovCoverage(c.x, c.y);
+            if (c.inside) insideCount++;
+        });
+
+        const pct = Math.round((insideCount / chairs.length) * 100);
+        const metricEl = document.getElementById('coverageMetric');
+        metricEl.innerText = `${pct}%`;
+        document.getElementById('ringLabel').innerText = `${pct}%`;
+
+        // Update ring
+        const circ = 169.6;
+        const offset = circ * (1 - pct / 100);
+        const ring = document.getElementById('coverageRing');
+        ring.style.strokeDashoffset = offset;
+
+        // Color logic
+        metricEl.className = 'stats-pct';
+        if (pct === 100) {
+            metricEl.classList.add('s-perfect');
+            ring.style.stroke = '#137333';
+        } else if (pct >= 60) {
+            metricEl.classList.add('s-good');
+            ring.style.stroke = '#1967D2';
+        } else {
+            metricEl.classList.add('s-low');
+            ring.style.stroke = '#C5221F';
+        }
+
+        draw();
+    }
+
+    /* ─── DRAG ─── */
+    function onPointerDown(e) {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const mouseXInMeters = (mx - RULER) / PPM;
+        const mouseYInMeters = (my - RULER) / PPM;
+
+        const camPX = cam.x * PPM + RULER;
+        const camPY = cam.y * PPM + RULER;
+        if (Math.hypot(mx - camPX, my - camPY) < 25) {
+            dragTarget = 'cam';
+            canvas.setPointerCapture(e.pointerId);
+            return;
+        }
+
+        const tX = table.x * PPM + RULER;
+        const tY = table.y * PPM + RULER;
+        const tW = table.w * PPM;
+        const tH = table.h * PPM;
+        if (mx > tX - tW / 2 && mx < tX + tW / 2 && my > tY - tH / 2 && my < tY + tH / 2) {
+            dragTarget = 'table';
+            dragOffset.x = mouseXInMeters - table.x;
+            dragOffset.y = mouseYInMeters - table.y;
+            canvas.setPointerCapture(e.pointerId);
+        }
+    }
+
+    function onPointerMove(e) {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+
+        const camPX = cam.x * PPM + RULER;
+        const camPY = cam.y * PPM + RULER;
+        const tX = table.x * PPM + RULER;
+        const tY = table.y * PPM + RULER;
+        const tW = table.w * PPM;
+        const tH = table.h * PPM;
+
+        if (Math.hypot(mx - camPX, my - camPY) < 25 ||
+            (mx > tX - tW / 2 && mx < tX + tW / 2 && my > tY - tH / 2 && my < tY + tH / 2)) {
+            canvas.style.cursor = 'grab';
+        } else {
+            canvas.style.cursor = 'default';
+        }
+
+        if (!dragTarget) return;
+        canvas.style.cursor = 'grabbing';
+
+        const mouseXInMeters = (mx - RULER) / PPM;
+        const mouseYInMeters = (my - RULER) / PPM;
+
+        if (dragTarget === 'cam') {
+            cam.x = Math.max(0, Math.min(room.w, mouseXInMeters));
+            cam.y = Math.max(0, Math.min(room.h, mouseYInMeters));
+        } else if (dragTarget === 'table') {
+            table.x = Math.max(table.w / 2, Math.min(room.w - table.w / 2, mouseXInMeters - dragOffset.x));
+            table.y = Math.max(table.h / 2, Math.min(room.h - table.h / 2, mouseYInMeters - dragOffset.y));
+        }
+        updateChairsAndDraw();
+    }
+
+    function onPointerUp(e) {
+        if (dragTarget) {
+            canvas.releasePointerCapture(e.pointerId);
+            dragTarget = null;
+        }
+    }
+
+    /* ─── RENDER ─── */
+    function draw() {
+        ctx.fillStyle = '#0D1117';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        drawGrid();
+        drawFOV();
+        drawTableAndChairs();
+        drawCamera();
+        drawRulers();
+    }
+
+    function drawGrid() {
+        ctx.strokeStyle = 'rgba(255,255,255,0.028)';
+        ctx.lineWidth = 1;
+        const step = 0.6 * PPM;
+        for (let x = RULER; x <= canvas.width; x += step) {
+            ctx.beginPath(); ctx.moveTo(x, RULER); ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+        for (let y = RULER; y <= canvas.height; y += step) {
+            ctx.beginPath(); ctx.moveTo(RULER, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+        // Meter grid (brighter)
+        ctx.strokeStyle = 'rgba(255,255,255,0.055)';
+        const mStep = 1.0 * PPM;
+        for (let x = RULER; x <= canvas.width; x += mStep) {
+            ctx.beginPath(); ctx.moveTo(x, RULER); ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+        for (let y = RULER; y <= canvas.height; y += mStep) {
+            ctx.beginPath(); ctx.moveTo(RULER, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+    }
+
+    function drawRulers() {
+        // Backgrounds
+        ctx.fillStyle = '#121820';
+        ctx.fillRect(0, 0, canvas.width, RULER);
+        ctx.fillRect(0, 0, RULER, canvas.height);
+
+        // Corner block
+        ctx.fillStyle = '#0D1117';
+        ctx.fillRect(0, 0, RULER, RULER);
+
+        // Ruler border
+        ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(RULER, 0); ctx.lineTo(RULER, canvas.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, RULER); ctx.lineTo(canvas.width, RULER); ctx.stroke();
+
+        ctx.fillStyle = '#6B7588';
+        ctx.font = '10px "JetBrains Mono", monospace';
+
+        // X ruler
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (let x = 0; x <= room.w; x += 0.6) {
+            let px = x * PPM + RULER;
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(px, RULER - 6); ctx.lineTo(px, RULER); ctx.stroke();
+            if (x % 1.2 < 0.01 || Math.abs(x % 1.2 - 1.2) < 0.01) {
+                ctx.fillText(x.toFixed(1), px, RULER / 2);
+            }
+        }
+
+        // Y ruler
+        ctx.textAlign = 'right';
+        for (let y = 0; y <= room.h; y += 0.6) {
+            let py = y * PPM + RULER;
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(RULER - 6, py); ctx.lineTo(RULER, py); ctx.stroke();
+            if (y % 1.2 < 0.01 || Math.abs(y % 1.2 - 1.2) < 0.01) {
+                ctx.fillText(y.toFixed(1), RULER - 9, py);
+            }
+        }
+    }
+
+    function drawFOV() {
+        const cx = cam.x * PPM + RULER;
+        const cy = cam.y * PPM + RULER;
+        const r = 2000;
+        const angleRad = (cam.rot * Math.PI) / 180;
+        const fovRad = (cam.fov * Math.PI) / 180;
+        const startAngle = angleRad - fovRad / 2;
+        const endAngle = angleRad + fovRad / 2;
+
+        // FOV fill with gradient
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 550);
+        grad.addColorStop(0, 'rgba(25,103,210,0.28)');
+        grad.addColorStop(0.4, 'rgba(59,130,246,0.10)');
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fill();
+
+        // FOV edge lines
+        ctx.strokeStyle = 'rgba(59,130,246,0.45)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 5]);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(startAngle) * r, cy + Math.sin(startAngle) * r);
+        ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(endAngle) * r, cy + Math.sin(endAngle) * r);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    function drawTableAndChairs() {
+        // Chairs
+        chairs.forEach(c => {
+            const cx = c.x * PPM + RULER;
+            const cy = c.y * PPM + RULER;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate((c.angle * Math.PI) / 180);
+
+            if (c.inside) {
+                ctx.strokeStyle = 'rgba(16,185,129,0.9)';
+                ctx.fillStyle = 'rgba(16,185,129,0.12)';
+            } else {
+                ctx.strokeStyle = 'rgba(239,68,68,0.5)';
+                ctx.fillStyle = 'rgba(239,68,68,0.05)';
+            }
+
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.roundRect(-15, -15, 30, 30, 5);
+            ctx.fill();
+            ctx.stroke();
+
+            const sColor  = c.inside ? 'rgba(16,185,129,0.85)' : 'rgba(239,68,68,0.5)';
+            const sFill   = c.inside ? 'rgba(16,185,129,0.13)' : 'rgba(239,68,68,0.06)';
+
+            // ── Seat (square, center) ──
+            ctx.fillStyle   = sFill;
+            ctx.strokeStyle = sColor;
+            ctx.lineWidth   = 1.8;
+            ctx.beginPath();
+            ctx.roundRect(-11, -11, 22, 22, 4);
+            ctx.fill();
+            ctx.stroke();
+
+            // ── Chair back: thick bar on the −x side (away from table) ──
+            // With angle=0  → back faces left,  opening faces right (toward table) ✓
+            // With angle=180 → back faces right, opening faces left  (toward table) ✓
+            // With angle=270 → back faces down,  opening faces up    (toward camera) ✓
+            ctx.fillStyle = sColor;
+            ctx.beginPath();
+            ctx.roundRect(-16, -11, 6, 22, 3);
+            ctx.fill();
+
+            ctx.restore();
+        });
+
+        // Table
+        const tx = (table.x - table.w / 2) * PPM + RULER;
+        const ty = (table.y - table.h / 2) * PPM + RULER;
+        const tw = table.w * PPM;
+        const th = table.h * PPM;
+
+        ctx.fillStyle = 'rgba(139,92,246,0.10)';
+        ctx.strokeStyle = 'rgba(139,92,246,0.7)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(tx, ty, tw, th, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        // Table label
+        ctx.fillStyle = 'rgba(196,181,253,0.85)';
+        ctx.font = 'bold 12px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${table.w}m × ${table.h}m`, tx + tw / 2, ty + th / 2);
+    }
+
+    function drawCamera() {
+        const cx = cam.x * PPM + RULER;
+        const cy = cam.y * PPM + RULER;
+
+        // Outer ring pulse
+        ctx.strokeStyle = 'rgba(59,130,246,0.2)';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Body
+        ctx.fillStyle = '#1967D2';
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Direction indicator
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(
+            cx + Math.cos((cam.rot * Math.PI) / 180) * 14,
+            cy + Math.sin((cam.rot * Math.PI) / 180) * 14
+        );
+        ctx.stroke();
+        ctx.lineCap = 'butt';
+    }
+
+    init();
+</script>
+</body>
+</html>
