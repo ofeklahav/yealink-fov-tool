@@ -72,7 +72,7 @@
   },
   {
     "name": "UVC85",
-    "supports_avhub": true,
+    "supports_avhub": false,
     "lenses": [
       { "label": "Default", "hfov": 80, "dof": "1m - Infinity", "audio_pickup_range": "N/A (Supports external mics)" }
     ]
