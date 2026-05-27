@@ -1,0 +1,136 @@
+[
+  {
+    "name": "MeetingBar A10",
+    "lenses": [
+      { "label": "Default", "hfov": 105, "dof": "Not specified", "audio_pickup_range": "4.5m" }
+    ]
+  },
+  {
+    "name": "MeetingBar A20",
+    "lenses": [
+      { "label": "Default", "hfov": 110, "dof": "Not specified", "audio_pickup_range": "6m" }
+    ]
+  },
+  {
+    "name": "MeetingBar A25",
+    "lenses": [
+      { "label": "Wide", "hfov": 151, "dof": "0.4m - 2.5m", "audio_pickup_range": "5m" },
+      { "label": "Tele", "hfov": 84.4, "dof": "0.4m - 2.5m", "audio_pickup_range": "5m" }
+    ]
+  },
+  {
+    "name": "MeetingBar A30",
+    "lenses": [
+      { "label": "Wide", "hfov": 112, "dof": "Not specified", "audio_pickup_range": "6m" },
+      { "label": "Tele", "hfov": 81, "dof": "Not specified", "audio_pickup_range": "6m" }
+    ]
+  },
+  {
+    "name": "MeetingBar A40",
+    "supports_mtower": true,
+    "lenses": [
+      { "label": "Default", "hfov": 110, "dof": "1m - 5m", "audio_pickup_range": "6m" }
+    ]
+  },
+  {
+    "name": "MeetingBar A50",
+    "supports_mtower": true,
+    "lenses": [
+      { "label": "Wide", "hfov": 98, "dof": "0.7m - 8m", "audio_pickup_range": "10m" },
+      { "label": "Tele", "hfov": 41.6, "dof": "0.7m - 8m", "audio_pickup_range": "10m" }
+    ]
+  },
+  {
+    "name": "SmartVision 40",
+    "lenses": [
+      { "label": "Default", "hfov": 110, "dof": "Not specified", "audio_pickup_range": "6m" }
+    ]
+  },
+  {
+    "name": "SmartVision 80",
+    "supports_avhub": true,
+    "lenses": [
+      { "label": "PTZ", "hfov": 61.5, "dof": "Up to 15m (Max distance)", "audio_pickup_range": "N/A (Supports external mics)" },
+      { "label": "Panoramic", "hfov": 98, "dof": "Not specified", "audio_pickup_range": "N/A (Supports external mics)" },
+      { "label": "Tele", "hfov": 41.6, "dof": "Not specified", "audio_pickup_range": "N/A (Supports external mics)" }
+    ]
+  },
+  {
+    "name": "MTower",
+    "is_mtower": true,
+    "lenses": [
+      { "label": "Wide", "hfov": 151, "dof": "Not specified", "audio_pickup_range": "6m" },
+      { "label": "Tele", "hfov": 84.4, "dof": "Not specified", "audio_pickup_range": "6m" }
+    ]
+  },
+  {
+    "name": "UVC85",
+    "supports_avhub": true,
+    "lenses": [
+      { "label": "Default", "hfov": 80, "dof": "Not specified", "audio_pickup_range": "N/A (Supports external mics)" }
+    ]
+  },
+  {
+    "name": "UVC86",
+    "supports_avhub": true,
+    "lenses": [
+      { "label": "Panoramic", "hfov": 110, "dof": "Not specified", "audio_pickup_range": "N/A (Supports external mics)" },
+      { "label": "PTZ", "hfov": 81, "dof": "1m - Infinity (Focal length)", "audio_pickup_range": "N/A (Supports external mics)" }
+    ]
+  },
+  {
+    "name": "MeetingBoard (65/86)",
+    "lenses": [
+      { "label": "Default", "hfov": 110, "dof": "Not specified", "audio_pickup_range": "8m" }
+    ]
+  },
+  {
+    "name": "MeetingBoard Pro",
+    "supports_mtower": true,
+    "lenses": [
+      { "label": "Default", "hfov": 98.2, "dof": "Not specified", "audio_pickup_range": "12m" }
+    ]
+  },
+  {
+    "name": "MeetingBoard C EDLA",
+    "lenses": [
+      { "label": "Default", "hfov": 98.2, "dof": "Not specified", "audio_pickup_range": "8m" }
+    ]
+  },
+  {
+    "name": "MB-12X Pro",
+    "lenses": [
+      { "label": "Default", "hfov": 80, "dof": "Not specified", "audio_pickup_range": "N/A (Camera module)" }
+    ]
+  },
+  {
+    "name": "MB-Camera-6X",
+    "lenses": [
+      { "label": "Default", "hfov": 80, "dof": "Not specified", "audio_pickup_range": "N/A (Camera module)" }
+    ]
+  },
+  {
+    "name": "MB-Camera-12X",
+    "lenses": [
+      { "label": "Default", "hfov": 90, "dof": "Not specified", "audio_pickup_range": "N/A (Camera module)" }
+    ]
+  },
+  {
+    "name": "UVC34",
+    "lenses": [
+      { "label": "Default", "hfov": 120, "dof": "Not specified", "audio_pickup_range": "5m" }
+    ]
+  },
+  {
+    "name": "UVC40 E2",
+    "lenses": [
+      { "label": "Default", "hfov": 120, "dof": "Not specified", "audio_pickup_range": "6m" }
+    ]
+  },
+  {
+    "name": "DeskVision A24",
+    "lenses": [
+      { "label": "Default", "hfov": 83, "dof": "Not specified", "audio_pickup_range": "12m" }
+    ]
+  }
+]
