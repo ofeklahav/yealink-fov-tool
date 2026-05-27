@@ -6,454 +6,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-            --primary: #1967D2;
-            --primary-bg: rgba(25,103,210,0.08);
-            --primary-ring: rgba(25,103,210,0.2);
-            --green: #137333;
-            --green-bg: rgba(19,115,51,0.09);
-            --red: #C5221F;
-            --red-bg: rgba(197,34,31,0.08);
-            --amber: #E37400;
-            --amber-bg: rgba(227,116,0,0.09);
-            --text-1: #202124;
-            --text-2: #5F6368;
-            --text-3: #9AA0A6;
-            --surface: #FFFFFF;
-            --surface-2: #F8F9FA;
-            --surface-3: #F1F3F4;
-            --border: rgba(0,0,0,0.09);
-            --border-med: rgba(0,0,0,0.14);
-            --topbar-bg: #161C2C;
-            --topbar-h: 56px;
-            --toolbar-h: 38px;
-            --sidebar-w: 348px;
-            --font: 'DM Sans', system-ui, sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-            --font-display: 'Syne', sans-serif;
-        }
-
-        html, body { height: 100%; overflow: hidden; }
-
-        body {
-            font-family: var(--font);
-            background: var(--surface-2);
-            color: var(--text-1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* ─── TOP BAR ─── */
-        .topbar {
-            height: var(--topbar-h);
-            background: var(--topbar-bg);
-            display: flex;
-            align-items: center;
-            padding: 0 18px;
-            gap: 10px;
-            flex-shrink: 0;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-            padding-left: 18px;
-            border-left: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .brand-icon {
-            width: 30px; height: 30px;
-            background: var(--primary);
-            border-radius: 7px;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .brand-name {
-            font-family: var(--font-display);
-            font-size: 15px; font-weight: 700;
-            color: #fff; letter-spacing: -0.2px;
-            white-space: nowrap;
-        }
-
-        .brand-version {
-            font-size: 10px; font-weight: 500;
-            color: rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 4px;
-            padding: 2px 6px;
-            letter-spacing: 0.5px;
-        }
-
-        .topbar-divider { width:1px; height:22px; background: rgba(255,255,255,0.1); }
-
-        .topbar-label {
-            font-size: 11px; font-weight: 500;
-            color: rgba(255,255,255,0.38);
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-
-        /* ─── CUSTOM DROPDOWN ─── */
-        .cam-dropdown {
-            flex: 1; max-width: 310px;
-            position: relative;
-        }
-
-        .cam-dd-trigger {
-            width: 100%; height: 34px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 8px;
-            color: #E8EDF8;
-            font-family: var(--font); font-size: 13px; font-weight: 400;
-            padding: 0 10px 0 32px;
-            cursor: pointer; outline: none;
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 8px;
-            transition: background 0.15s, border-color 0.15s;
-            text-align: right;
-        }
-
-        .cam-dd-trigger:hover { background: rgba(255,255,255,0.09); }
-
-        .cam-dropdown.open .cam-dd-trigger {
-            border-color: rgba(25,103,210,0.65);
-            background: rgba(255,255,255,0.08);
-            border-radius: 8px 8px 0 0;
-        }
-
-        .cam-dd-text {
-            flex: 1; overflow: hidden;
-            text-overflow: ellipsis; white-space: nowrap;
-        }
-
-        .cam-dd-chevron {
-            flex-shrink: 0; width: 14px; height: 14px;
-            stroke: rgba(255,255,255,0.4); fill: none;
-            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-            transition: transform 0.2s ease;
-        }
-
-        .cam-dropdown.open .cam-dd-chevron { transform: rotate(180deg); }
-
-        .cam-dd-panel {
-            position: absolute;
-            top: 100%; right: 0; left: 0;
-            background: #1A2236;
-            border: 1px solid rgba(25,103,210,0.55);
-            border-top: none;
-            border-radius: 0 0 10px 10px;
-            z-index: 9999;
-            overflow: hidden;
-            max-height: 0;
-            opacity: 0;
-            pointer-events: none;
-            transition: max-height 0.22s ease, opacity 0.18s ease;
-        }
-
-        .cam-dropdown.open .cam-dd-panel {
-            max-height: 260px;
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .cam-dd-scroll {
-            max-height: 260px;
-            overflow-y: auto;
-            padding: 4px 0;
-        }
-
-        .cam-dd-scroll::-webkit-scrollbar { width: 5px; }
-        .cam-dd-scroll::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.03);
-        }
-        .cam-dd-scroll::-webkit-scrollbar-thumb {
-            background: rgba(25,103,210,0.5);
-            border-radius: 10px;
-        }
-        .cam-dd-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(25,103,210,0.75);
-        }
-
-        .cam-dd-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 8px 14px;
-            font-family: var(--font); font-size: 13px;
-            color: #C8D3EF;
-            cursor: pointer;
-            transition: background 0.1s;
-            gap: 10px;
-        }
-
-        .cam-dd-item:hover { background: rgba(255,255,255,0.06); color: #E8EDF8; }
-
-        .cam-dd-item.active {
-            background: rgba(25,103,210,0.22);
-            color: #8AB4F8;
-        }
-
-        .cam-dd-item-left {
-            display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden;
-        }
-
-        .cam-dd-dot {
-            width: 6px; height: 6px; border-radius: 50%;
-            background: transparent; flex-shrink: 0;
-            transition: background 0.15s;
-        }
-
-        .cam-dd-item.active .cam-dd-dot { background: #4A90D9; }
-
-        .cam-dd-name {
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
-
-        .cam-dd-fov {
-            font-family: var(--font-mono); font-size: 11px;
-            color: rgba(255,255,255,0.28); flex-shrink: 0;
-        }
-
-        .cam-dd-item.active .cam-dd-fov { color: rgba(138,180,248,0.65); }
-
-        /* ─── CHIPS GROUP ─── */
-        .chips-group {
-            display: flex; gap: 6px; flex-shrink: 0;
-        }
-
-        .fov-chip {
-            display: flex; align-items: center; gap: 5px;
-            border-radius: 20px;
-            padding: 4px 10px;
-            font-family: var(--font-mono); font-size: 11px; font-weight: 500;
-            white-space: nowrap;
-            letter-spacing: 0.3px;
-            border: 1px solid transparent;
-        }
-
-        .chip-blue { background: rgba(25,103,210,0.22); border-color: rgba(25,103,210,0.4); color: #8AB4F8; }
-        .chip-purple { background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.4); color: #C4B5FD; }
-        .chip-amber { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.4); color: #FCD34D; }
-
-        .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-        .dot-blue { background: #4A90D9; box-shadow: 0 0 0 3px rgba(74,144,217,0.25); }
-        .dot-purple { background: #8B5CF6; box-shadow: 0 0 0 3px rgba(139,92,246,0.25); }
-        .dot-amber { background: #F59E0B; box-shadow: 0 0 0 3px rgba(245,158,11,0.25); }
-
-        /* ─── APP BODY ─── */
-        .app-body { flex: 1; display: flex; overflow: hidden; }
-
-        /* ─── CANVAS AREA ─── */
-        .canvas-area {
-            flex: 1; display: flex; flex-direction: column;
-            background: #0D1117; overflow: hidden;
-        }
-
-        .canvas-toolbar {
-            height: var(--toolbar-h);
-            background: #121820;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex; align-items: center;
-            padding: 0 16px; gap: 0;
-            flex-shrink: 0;
-        }
-
-        .ct-item {
-            display: flex; align-items: center; gap: 5px;
-            padding: 0 14px;
-            font-size: 11px; font-weight: 400;
-            font-family: var(--font-mono);
-            color: rgba(255,255,255,0.3);
-            border-right: 1px solid rgba(255,255,255,0.06);
-            height: 100%;
-        }
-
-        .ct-item:first-child { padding-right: 0; }
-        .ct-item:last-child { border-right: none; }
-
-        .ct-item strong {
-            font-weight: 500;
-            color: rgba(255,255,255,0.55);
-        }
-
-        .ct-spacer { flex: 1; }
-
-        .canvas-container {
-            flex: 1; display: block; position: relative;
-            background: #0D1117; overflow: hidden;
-        }
-
-        canvas { 
-            display: block; width: 100%; height: 100%; 
-            touch-action: none;
-        }
-
-        /* ─── CANVAS CONTROLS (ZOOM/PAN) ─── */
-        .canvas-controls {
-            position: absolute; bottom: 24px; right: 24px;
-            background: rgba(22, 28, 44, 0.9);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px; display: flex; align-items: center;
-            padding: 4px; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-
-        .canvas-controls button {
-            background: transparent; border: none; color: #E8EDF8;
-            width: 32px; height: 32px; border-radius: 6px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: background 0.15s;
-        }
-
-        .canvas-controls button:hover { background: rgba(255,255,255,0.1); }
-        .canvas-controls span {
-            font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: #E8EDF8;
-            min-width: 48px; text-align: center; user-select: none;
-        }
-
-        /* ─── SIDEBAR ─── */
-        .sidebar {
-            width: var(--sidebar-w); flex-shrink: 0;
-            background: var(--surface);
-            border-right: 1px solid var(--border-med);
-            display: flex; flex-direction: column;
-            overflow: hidden;
-        }
-
-        .sidebar-scroll {
-            flex: 1; overflow-y: auto; overflow-x: hidden;
-        }
-
-        .sidebar-scroll::-webkit-scrollbar { width: 3px; }
-        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
-        .sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border-med); border-radius: 3px; }
-
-        .sidebar-section {
-            padding: 18px 18px 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .sec-head {
-            display: flex; align-items: center; gap: 9px;
-            margin-bottom: 14px;
-        }
-
-        .sec-icon {
-            width: 26px; height: 26px; border-radius: 6px;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .si-blue { background: var(--primary-bg); }
-        .si-amber { background: var(--amber-bg); }
-        .si-green { background: var(--green-bg); }
-
-        .sec-icon svg { width: 14px; height: 14px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-        .si-blue svg { stroke: var(--primary); }
-        .si-amber svg { stroke: var(--amber); }
-        .si-green svg { stroke: var(--green); }
-
-        .sec-title { font-size: 12px; font-weight: 600; color: var(--text-1); letter-spacing: 0.1px; }
-
-        /* Fields */
-        .field { margin-bottom: 12px; }
-        .field:last-child { margin-bottom: 0; }
-
-        .fl { display: block; font-size: 11px; font-weight: 500; color: var(--text-2); margin-bottom: 5px; }
-
-        .fi {
-            width: 100%; height: 34px;
-            border: 1px solid var(--border-med);
-            border-radius: 7px; padding: 0 10px;
-            font-family: var(--font-mono); font-size: 13px; color: var(--text-1);
-            background: var(--surface-2);
-            outline: none;
-            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-        }
-
-        .fi:hover { border-color: var(--primary); background: var(--surface); }
-        .fi:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px var(--primary-ring); }
-
-        .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .field-grid .field { margin-bottom: 0; }
-
-        /* Rotation */
-        .rot-row { display: flex; align-items: center; gap: 10px; }
-
-        .rot-row input[type="range"] {
-            flex: 1; height: 4px; cursor: pointer;
-            accent-color: var(--primary);
-        }
-
-        .rot-pill {
-            font-family: var(--font-mono); font-size: 12px; font-weight: 500;
-            color: var(--primary); background: var(--primary-bg);
-            border-radius: 6px; padding: 4px 9px;
-            min-width: 46px; text-align: center;
-        }
-
-        /* ─── STATS PANEL ─── */
-        .stats-panel {
-            padding: 18px;
-            background: var(--surface);
-            border-top: 1px solid var(--border-med);
-            flex-shrink: 0;
-        }
-
-        .stats-headline {
-            font-size: 10px; font-weight: 600; letter-spacing: 0.7px;
-            text-transform: uppercase; color: var(--text-3);
-            margin-bottom: 14px;
-        }
-
-        .stats-main { display: flex; align-items: center; gap: 16px; }
-
-        .ring-wrap {
-            width: 68px; height: 68px; position: relative; flex-shrink: 0;
-        }
-
-        .ring-wrap svg { transform: rotate(-90deg); display: block; }
-
-        .ring-inner {
-            position: absolute; inset: 0;
-            display: flex; align-items: center; justify-content: center;
-            font-family: var(--font-mono); font-size: 12px; font-weight: 500;
-            color: var(--text-2);
-        }
-
-        .stats-numbers { flex: 1; }
-
-        .stats-pct {
-            font-family: var(--font-display);
-            font-size: 30px; font-weight: 700; line-height: 1;
-            margin-bottom: 4px;
-            transition: color 0.3s;
-        }
-
-        .stat-label { font-size: 12px; color: var(--text-2); }
-
-        .s-perfect { color: var(--green); }
-        .s-good    { color: var(--primary); }
-        .s-low     { color: var(--red); }
-
-        /* Hints */
-        .hints { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
-
-        .hint {
-            display: flex; align-items: flex-start; gap: 9px;
-            font-size: 11.5px; line-height: 1.5; color: var(--text-2);
-        }
-
-        .hd { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-
-        .hint b { font-weight: 600; }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -467,37 +20,7 @@
             </svg>
         </div>
         <span class="brand-name">AV Space Planner</span>
-        <span class="brand-version">v2.2</span>
-    </div>
-
-    <div class="topbar-divider"></div>
-    <span class="topbar-label">דגם מצלמה / עדשה</span>
-
-    <div class="cam-dropdown" id="camDropdown">
-        <button class="cam-dd-trigger" id="camTrigger" type="button">
-            <span class="cam-dd-text" id="camDdText">טוען...</span>
-            <svg class="cam-dd-chevron" viewBox="0 0 24 24">
-                <polyline points="6 9 12 15 18 9"/>
-            </svg>
-        </button>
-        <div class="cam-dd-panel" id="camPanel">
-            <div class="cam-dd-scroll" id="camScroll"></div>
-        </div>
-    </div>
-
-    <div class="chips-group">
-        <div class="fov-chip chip-blue" id="chipFov">
-            <div class="chip-dot dot-blue"></div>
-            FOV&nbsp;<span id="fovDisplay">110°</span>
-        </div>
-        <div class="fov-chip chip-purple" id="chipDof" style="display:none;">
-            <div class="chip-dot dot-purple"></div>
-            DoF&nbsp;<span id="dofDisplay">-</span>
-        </div>
-        <div class="fov-chip chip-amber" id="chipAudio" style="display:none;">
-            <div class="chip-dot dot-amber"></div>
-            Mic&nbsp;<span id="audioDisplay">-</span>
-        </div>
+        <span class="brand-version">v2.3</span>
     </div>
 </div>
 
@@ -532,16 +55,74 @@
             <div class="sidebar-section">
                 <div class="sec-head">
                     <div class="sec-icon si-blue">
-                        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 1 0 20"/><path d="M12 6v6l3 3"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                     </div>
-                    <span class="sec-title">כיוון מצלמה (סיבוב)</span>
+                    <span class="sec-title">מצלמה</span>
                 </div>
                 <div class="field">
-                    <label class="fl">זווית</label>
+                    <label class="fl">דגם מצלמה</label>
+                    <div class="cam-dropdown" id="camDropdown">
+                        <button class="cam-dd-trigger" id="camTrigger" type="button">
+                            <span class="cam-dd-text" id="camDdText">טוען...</span>
+                            <svg class="cam-dd-chevron" viewBox="0 0 24 24">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                        <div class="cam-dd-panel" id="camPanel">
+                            <div class="cam-dd-scroll" id="camScroll"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="field" id="lensField" style="display: none;">
+                    <label class="fl">בחירת עדשה</label>
+                    <div class="segment-control" id="lensSegment"></div>
+                </div>
+                <div class="field">
+                    <div class="chips-group">
+                        <div class="fov-chip chip-blue" id="chipFov">
+                            <div class="chip-dot dot-blue"></div>
+                            FOV&nbsp;<span id="fovDisplay">110°</span>
+                        </div>
+                        <div class="fov-chip chip-purple" id="chipDof" style="display:none;">
+                            <div class="chip-dot dot-purple"></div>
+                            DoF&nbsp;<span id="dofDisplay">-</span>
+                        </div>
+                        <div class="fov-chip chip-amber" id="chipAudio" style="display:none;">
+                            <div class="chip-dot dot-amber"></div>
+                            Mic&nbsp;<span id="audioDisplay">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="field" style="margin-top: 14px;">
+                    <label class="fl">כיוון (סיבוב)</label>
                     <div class="rot-row">
                         <input type="range" id="camRotation" min="0" max="360" value="90">
                         <span class="rot-pill" id="rotVal">90°</span>
                     </div>
+                </div>
+                <div class="field" style="margin-top: 14px; border-top: 1px solid var(--border); padding-top: 14px;">
+                    <div class="toggle-row">
+                        <span class="fl" style="margin-bottom: 0;">ריבוי מצלמות / מצלמת הרחבה</span>
+                        <label class="switch">
+                            <input type="checkbox" id="multiCamToggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="multi-cam-controls" id="multiCamControls" style="display: none; margin-top: 14px;">
+                    <div class="field">
+                        <label class="fl">הוספת מצלמה נוספת (עד 3)</label>
+                        <div class="add-cam-row">
+                            <select class="fi" id="addCamSelect" style="flex: 1;"></select>
+                            <button class="add-cam-btn" id="addCamBtn" type="button" title="הוסף מצלמה">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="added-cams-list" id="addedCamsList"></div>
                 </div>
             </div>
 
@@ -587,8 +168,17 @@
                 </div>
             </div>
 
-        </div><div class="stats-panel">
-            <div class="stats-headline">ניתוח כיסוי · Real-time</div>
+        </div><div class="stats-panel" style="position: relative;">
+            <div class="stats-headline" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>ניתוח כיסוי · Real-time</span>
+                <button class="info-btn" id="legendTooltipBtn" title="מקרא צבעים וסימונים" type="button">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                </button>
+            </div>
             <div class="stats-main">
                 <div class="ring-wrap">
                     <svg width="68" height="68" viewBox="0 0 68 68">
@@ -604,742 +194,46 @@
                     <div class="stat-label">כיסוי כיסאות נתמך (FOV+DoF)</div>
                 </div>
             </div>
-            <div class="hints">
-                <div class="hint">
-                    <div class="hd" style="background:#3B82F6"></div>
-                    <span><b>שטח כחול (Fade)</b>: מופיע בהתאם למקסימום פוקוס ה-DoF של המצלמה.</span>
+
+            <div class="legend-popover" id="legendPopover">
+                <div class="popover-header">
+                    <span class="popover-title">מקרא סימונים וצבעים</span>
+                    <button class="popover-close" id="closeLegendBtn" type="button">&times;</button>
                 </div>
-                <div class="hint">
-                    <div class="hd" style="background:#F59E0B"></div>
-                    <span><b>קשת כתומה מקווקוות</b>: מסמלת את טווח קליטת המיקרופונים.</span>
-                </div>
-                <div class="hint">
-                    <div class="hd" style="background:#10B981"></div>
-                    <span><b>ירוק/אדום</b>: כיסא ירוק נמצא בטווח הצפייה התקין במלואו.</span>
+                <div class="hints">
+                    <div class="hint">
+                        <div class="hd" style="background:#3B82F6"></div>
+                        <span><b>שטח כחול (Fade)</b>: מופיע בהתאם למקסימום פוקוס ה-DoF של המצלמה.</span>
+                    </div>
+                    <div class="hint">
+                        <div class="hd" style="background:#F59E0B"></div>
+                        <span><b>קשת כתומה מקווקוות</b>: מסמלת את טווח קליטת המיקרופונים.</span>
+                    </div>
+                    <div class="hint">
+                        <div class="hd" style="background:#10B981"></div>
+                        <span><b>ירוק/אדום</b>: כיסא ירוק נמצא בטווח הצפייה התקין במלואו.</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-    </div></div><script>
-    const cameras = [
-      { "name": "MeetingBar A10", "hfov": 105, "dof": "Not specified", "audio_pickup_range": "4.5m" },
-      { "name": "MeetingBar A20", "hfov": 110, "dof": "Not specified", "audio_pickup_range": "6m" },
-      { "name": "MeetingBar A25 (Wide)", "hfov": 151, "dof": "0.4m - 2.5m", "audio_pickup_range": "5m" },
-      { "name": "MeetingBar A25 (Tele)", "hfov": 84.4, "dof": "0.4m - 2.5m", "audio_pickup_range": "5m" },
-      { "name": "MeetingBar A30 (Wide)", "hfov": 112, "dof": "Not specified", "audio_pickup_range": "6m" },
-      { "name": "MeetingBar A30 (Tele)", "hfov": 81, "dof": "Not specified", "audio_pickup_range": "6m" },
-      { "name": "MeetingBar A40", "hfov": 110, "dof": "1m - 5m", "audio_pickup_range": "6m" },
-      { "name": "MeetingBar A50 (Wide)", "hfov": 98, "dof": "0.7m - 8m", "audio_pickup_range": "10m" },
-      { "name": "MeetingBar A50 (Tele)", "hfov": 41.6, "dof": "0.7m - 8m", "audio_pickup_range": "10m" },
-      { "name": "SmartVision 40", "hfov": 110, "dof": "Not specified", "audio_pickup_range": "6m" },
-      { "name": "SmartVision 80 (PTZ)", "hfov": 61.5, "dof": "Up to 15m (Max distance)", "audio_pickup_range": "N/A (Supports external mics)" },
-      { "name": "SmartVision 80 (Panoramic)", "hfov": 98, "dof": "Not specified", "audio_pickup_range": "N/A (Supports external mics)" },
-      { "name": "SmartVision 80 (Tele)", "hfov": 41.6, "dof": "Not specified", "audio_pickup_range": "N/A (Supports external mics)" },
-      { "name": "MTower (Wide)", "hfov": 151, "dof": "Not specified", "audio_pickup_range": "6m" },
-      { "name": "MTower (Tele)", "hfov": 84.4, "dof": "Not specified", "audio_pickup_range": "6m" },
-      { "name": "UVC85", "hfov": 80, "dof": "Not specified", "audio_pickup_range": "N/A (Supports external mics)" },
-      { "name": "UVC86 (Panoramic)", "hfov": 110, "dof": "Not specified", "audio_pickup_range": "N/A (Supports external mics)" },
-      { "name": "UVC86 (PTZ)", "hfov": 81, "dof": "1m - Infinity (Focal length)", "audio_pickup_range": "N/A (Supports external mics)" },
-      { "name": "MeetingBoard (65/86)", "hfov": 110, "dof": "Not specified", "audio_pickup_range": "8m" },
-      { "name": "MeetingBoard Pro", "hfov": 98.2, "dof": "Not specified", "audio_pickup_range": "12m" },
-      { "name": "MeetingBoard C EDLA", "hfov": 98.2, "dof": "Not specified", "audio_pickup_range": "8m" },
-      { "name": "MB-12X Pro", "hfov": 80, "dof": "Not specified", "audio_pickup_range": "N/A (Camera module)" },
-      { "name": "MB-Camera-6X", "hfov": 80, "dof": "Not specified", "audio_pickup_range": "N/A (Camera module)" },
-      { "name": "MB-Camera-12X", "hfov": 90, "dof": "Not specified", "audio_pickup_range": "N/A (Camera module)" },
-      { "name": "UVC34", "hfov": 120, "dof": "Not specified", "audio_pickup_range": "5m" },
-      { "name": "UVC40 E2", "hfov": 120, "dof": "Not specified", "audio_pickup_range": "6m" },
-      { "name": "DeskVision A24", "hfov": 83, "dof": "Not specified", "audio_pickup_range": "12m" }
-    ];
+    </div></div>
+
+<!-- Custom Alert Modal -->
+<div class="modal-overlay" id="alertModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title" id="alertModalTitle">הודעה</span>
+            <button class="modal-close-btn" id="closeAlertModalBtn" type="button">&times;</button>
+        </div>
+        <div class="modal-body" id="alertModalMessage"></div>
+        <div class="modal-footer">
+            <button class="modal-ok-btn" id="alertModalOkBtn" type="button">אישור</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
 
-    // Data Parsers
-    function parseDoFMax(dofStr) {
-        if (!dofStr || dofStr === "Not specified") return null;
-        if (dofStr.includes("Infinity")) return Infinity;
-        
-        let max = null;
-        if (dofStr.includes("-")) {
-            const parts = dofStr.split("-");
-            max = parseFloat(parts[1].replace(/[^\d.]/g, ''));
-        } else if (dofStr.includes("Up to")) {
-            const maxMatch = dofStr.match(/([\d.]+)/);
-            if (maxMatch) max = parseFloat(maxMatch[1]);
-        }
-        return isNaN(max) ? null : max;
-    }
-
-    function parseAudio(audioStr) {
-        if (!audioStr || audioStr.includes("N/A")) return null;
-        const match = audioStr.match(/([\d.]+)/);
-        if (match) return parseFloat(match[1]);
-        return null;
-    }
-
-    const RULER = 50;
-    const PPM = 90;
-
-    const canvas = document.getElementById('roomCanvas');
-    const container = document.getElementById('canvasContainer');
-    const ctx = canvas.getContext('2d');
-    const rotSlider = document.getElementById('camRotation');
-    const rotVal = document.getElementById('rotVal');
-
-    let room = { w: 4.8, h: 5.4 };
-    let table = { x: 2.4, y: 3.0, w: 1.4, h: 2.4 };
-    let cam = { x: 2.4, y: 0.1, rot: 90, hfov: 110, dofMax: null, audioRadius: null };
-    let chairs = [];
-    
-    // Viewport State
-    let scale = 1.0;
-    let offsetX = 0;
-    let offsetY = 0;
-    
-    // Interaction State
-    let dragTarget = null;
-    let isPanning = false;
-    let dragOffset = { x: 0, y: 0 };
-    let lastMouse = { x: 0, y: 0 };
-
-    // ── Custom Dropdown ──
-    let selectedCamIdx = 6;
-
-    function updateChips(c) {
-        document.getElementById('fovDisplay').innerText = c.hfov + '°';
-
-        const dofChip = document.getElementById('chipDof');
-        if (cam.dofMax) {
-            dofChip.style.display = 'flex';
-            document.getElementById('dofDisplay').innerText = (cam.dofMax === Infinity) ? '∞' : (cam.dofMax + 'm');
-        } else {
-            dofChip.style.display = 'none';
-        }
-
-        const audioChip = document.getElementById('chipAudio');
-        if (c.audio_pickup_range && !c.audio_pickup_range.includes("N/A")) {
-            audioChip.style.display = 'flex';
-            document.getElementById('audioDisplay').innerText = c.audio_pickup_range;
-        } else {
-            audioChip.style.display = 'none';
-        }
-    }
-
-    function buildDropdown() {
-        const scroll = document.getElementById('camScroll');
-        const trigger = document.getElementById('camTrigger');
-        const ddText = document.getElementById('camDdText');
-        const dropdown = document.getElementById('camDropdown');
-
-        cameras.forEach((c, i) => {
-            const item = document.createElement('div');
-            item.className = 'cam-dd-item' + (i === selectedCamIdx ? ' active' : '');
-            item.innerHTML = `
-                <div class="cam-dd-item-left">
-                    <div class="cam-dd-dot"></div>
-                    <span class="cam-dd-name">${c.name}</span>
-                </div>
-                <span class="cam-dd-fov">${c.hfov}°</span>
-            `;
-            item.addEventListener('click', () => {
-                selectedCamIdx = i;
-                cam.hfov = c.hfov;
-                cam.dofMax = parseDoFMax(c.dof);
-                cam.audioRadius = parseAudio(c.audio_pickup_range);
-                updateChips(c);
-                updateChairsAndDraw();
-                
-                ddText.textContent = c.name;
-                scroll.querySelectorAll('.cam-dd-item').forEach((el, j) => {
-                    el.classList.toggle('active', j === i);
-                });
-                closeDropdown();
-            });
-            scroll.appendChild(item);
-        });
-
-        ddText.textContent = cameras[selectedCamIdx].name;
-
-        trigger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle('open');
-        });
-
-        document.addEventListener('click', closeDropdown);
-    }
-
-    function closeDropdown() {
-        document.getElementById('camDropdown').classList.remove('open');
-    }
-
-    function init() {
-        buildDropdown();
-
-        const initialCam = cameras[selectedCamIdx];
-        cam.hfov = initialCam.hfov;
-        cam.dofMax = parseDoFMax(initialCam.dof);
-        cam.audioRadius = parseAudio(initialCam.audio_pickup_range);
-        updateChips(initialCam);
-
-        rotSlider.addEventListener('input', (e) => {
-            cam.rot = parseInt(e.target.value);
-            rotVal.innerText = cam.rot + '°';
-            updateChairsAndDraw();
-        });
-
-        ['roomW', 'roomH', 'tableW', 'tableH', 'tableDist'].forEach(id => {
-            document.getElementById(id).addEventListener('input', readInputs);
-        });
-
-        // Resize Handling
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-        centerRoom();
-
-        // Mouse/Touch Events
-        canvas.addEventListener('pointerdown', onPointerDown);
-        canvas.addEventListener('pointermove', onPointerMove);
-        canvas.addEventListener('pointerup', onPointerUp);
-        canvas.addEventListener('pointerleave', onPointerUp);
-        
-        // Wheel Zoom Event
-        canvas.addEventListener('wheel', onWheel, { passive: false });
-
-        // Controls
-        document.getElementById('btnZoomIn').addEventListener('click', () => zoomBy(1.2));
-        document.getElementById('btnZoomOut').addEventListener('click', () => zoomBy(1 / 1.2));
-        document.getElementById('btnResetView').addEventListener('click', centerRoom);
-
-        readInputs();
-    }
-
-    function resizeCanvas() {
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-        draw();
-    }
-
-    function centerRoom() {
-        scale = 1.0;
-        offsetX = (canvas.width - RULER - room.w * PPM) / 2;
-        offsetY = (canvas.height - RULER - room.h * PPM) / 2;
-        updateZoomDisplay();
-        draw();
-    }
-
-    function zoomBy(factor) {
-        let newScale = scale * factor;
-        newScale = Math.max(0.2, Math.min(newScale, 5));
-        
-        // Zoom towards center of screen
-        const cx = (canvas.width + RULER) / 2;
-        const cy = (canvas.height + RULER) / 2;
-        
-        const wx = (cx - RULER - offsetX) / (PPM * scale);
-        const wy = (cy - RULER - offsetY) / (PPM * scale);
-
-        offsetX = cx - RULER - wx * PPM * newScale;
-        offsetY = cy - RULER - wy * PPM * newScale;
-        scale = newScale;
-        
-        updateZoomDisplay();
-        draw();
-    }
-
-    function updateZoomDisplay() {
-        document.getElementById('zoomDisplay').innerText = Math.round(scale * 100) + '%';
-    }
-
-    function readInputs(e) {
-        room.w = parseFloat(document.getElementById('roomW').value) || 4.8;
-        room.h = parseFloat(document.getElementById('roomH').value) || 5.4;
-        table.w = parseFloat(document.getElementById('tableW').value) || 1.4;
-        table.h = parseFloat(document.getElementById('tableH').value) || 2.4;
-        
-        // מעדכנים את מיקום השולחן לפי המרחק רק אם זה נטען הרגע או שהאירוע הגיע מהשדה
-        if (!e || e.target.id === 'tableDist' || e.target.id === 'tableH') {
-            let tDist = parseFloat(document.getElementById('tableDist').value) || 0;
-            table.y = tDist + table.h / 2;
-        }
-
-        document.getElementById('roomDimDisplay').innerText = `${room.w} × ${room.h} מ׳`;
-        document.getElementById('tableDimDisplay').innerText = `${table.w} × ${table.h} מ׳`;
-
-        updateChairsAndDraw();
-    }
-
-    function generateChairs() {
-        chairs = [];
-        const chairSpacing = 0.65;
-        const sideChairsCount = Math.max(1, Math.floor(table.h / chairSpacing));
-        const startY = table.y - (sideChairsCount - 1) * chairSpacing / 2;
-
-        for (let i = 0; i < sideChairsCount; i++) {
-            let cy = startY + i * chairSpacing;
-            chairs.push({ x: table.x - table.w / 2 - 0.25, y: cy, angle: 0 });
-            chairs.push({ x: table.x + table.w / 2 + 0.25, y: cy, angle: 180 });
-        }
-        chairs.push({ x: table.x, y: table.y + table.h / 2 + 0.25, angle: 270 });
-    }
-
-    function checkFovCoverage(px, py) {
-        let dx = px - cam.x;
-        let dy = py - cam.y;
-        let dist = Math.hypot(dx, dy);
-
-        let angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
-        if (angleDeg < 0) angleDeg += 360;
-        let diff = (angleDeg - cam.rot + 180) % 360 - 180;
-        let finalDiff = diff < -180 ? diff + 360 : diff;
-        let inFov = Math.abs(finalDiff) <= cam.hfov / 2;
-
-        let inDof = true;
-        if (cam.dofMax && cam.dofMax !== Infinity) {
-            inDof = dist <= cam.dofMax;
-        }
-
-        return inFov && inDof;
-    }
-
-    function updateChairsAndDraw() {
-        generateChairs();
-
-        let insideCount = 0;
-        chairs.forEach(c => {
-            c.inside = checkFovCoverage(c.x, c.y);
-            if (c.inside) insideCount++;
-        });
-
-        const pct = Math.round((insideCount / chairs.length) * 100);
-        const metricEl = document.getElementById('coverageMetric');
-        metricEl.innerText = `${pct}%`;
-        document.getElementById('ringLabel').innerText = `${pct}%`;
-
-        const circ = 169.6;
-        const ring = document.getElementById('coverageRing');
-        ring.style.strokeDashoffset = circ * (1 - pct / 100);
-
-        metricEl.className = 'stats-pct';
-        if (pct === 100) {
-            metricEl.classList.add('s-perfect');
-            ring.style.stroke = '#137333';
-        } else if (pct >= 60) {
-            metricEl.classList.add('s-good');
-            ring.style.stroke = '#1967D2';
-        } else {
-            metricEl.classList.add('s-low');
-            ring.style.stroke = '#C5221F';
-        }
-
-        draw();
-    }
-
-    /* ─── INTERACTIONS ─── */
-    function onWheel(e) {
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-
-        if (mx < RULER || my < RULER) return;
-
-        const zoomIntensity = 0.002;
-        const delta = -e.deltaY * zoomIntensity;
-        let newScale = scale * Math.exp(delta);
-        newScale = Math.max(0.2, Math.min(newScale, 5));
-
-        const wx = (mx - RULER - offsetX) / (PPM * scale);
-        const wy = (my - RULER - offsetY) / (PPM * scale);
-
-        offsetX = mx - RULER - wx * PPM * newScale;
-        offsetY = my - RULER - wy * PPM * newScale;
-        scale = newScale;
-
-        updateZoomDisplay();
-        draw();
-    }
-
-    function onPointerDown(e) {
-        const rect = canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-        lastMouse = { x: mx, y: my };
-
-        if (mx < RULER || my < RULER) return;
-
-        const wx = (mx - RULER - offsetX) / (PPM * scale);
-        const wy = (my - RULER - offsetY) / (PPM * scale);
-
-        const camPx = RULER + offsetX + cam.x * PPM * scale;
-        const camPy = RULER + offsetY + cam.y * PPM * scale;
-        if (Math.hypot(mx - camPx, my - camPy) < 25) {
-            dragTarget = 'cam';
-            canvas.setPointerCapture(e.pointerId);
-            return;
-        }
-
-        const tX = RULER + offsetX + table.x * PPM * scale;
-        const tY = RULER + offsetY + table.y * PPM * scale;
-        const tW = table.w * PPM * scale;
-        const tH = table.h * PPM * scale;
-        if (mx > tX - tW / 2 && mx < tX + tW / 2 && my > tY - tH / 2 && my < tY + tH / 2) {
-            dragTarget = 'table';
-            dragOffset.x = wx - table.x;
-            dragOffset.y = wy - table.y;
-            canvas.setPointerCapture(e.pointerId);
-            return;
-        }
-
-        isPanning = true;
-        canvas.setPointerCapture(e.pointerId);
-    }
-
-    function onPointerMove(e) {
-        const rect = canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-        const dx = mx - lastMouse.x;
-        const dy = my - lastMouse.y;
-        lastMouse = { x: mx, y: my };
-
-        const camPx = RULER + offsetX + cam.x * PPM * scale;
-        const camPy = RULER + offsetY + cam.y * PPM * scale;
-        const tX = RULER + offsetX + table.x * PPM * scale;
-        const tY = RULER + offsetY + table.y * PPM * scale;
-        const tW = table.w * PPM * scale;
-        const tH = table.h * PPM * scale;
-
-        if (dragTarget || isPanning) {
-            canvas.style.cursor = 'grabbing';
-        } else if (Math.hypot(mx - camPx, my - camPy) < 25 ||
-                   (mx > tX - tW / 2 && mx < tX + tW / 2 && my > tY - tH / 2 && my < tY + tH / 2)) {
-            canvas.style.cursor = 'grab';
-        } else {
-            canvas.style.cursor = 'default';
-        }
-
-        if (isPanning) {
-            offsetX += dx;
-            offsetY += dy;
-            draw();
-            return;
-        }
-
-        if (!dragTarget) return;
-
-        const wx = (mx - RULER - offsetX) / (PPM * scale);
-        const wy = (my - RULER - offsetY) / (PPM * scale);
-
-        if (dragTarget === 'cam') {
-            cam.x = Math.max(0, Math.min(room.w, wx));
-            cam.y = Math.max(0, Math.min(room.h, wy));
-        } else if (dragTarget === 'table') {
-            table.x = Math.max(table.w / 2, Math.min(room.w - table.w / 2, wx - dragOffset.x));
-            table.y = Math.max(table.h / 2, Math.min(room.h - table.h / 2, wy - dragOffset.y));
-            // מעדכנים את שדה הקלט כשהמשתמש גורר את השולחן
-            document.getElementById('tableDist').value = Math.max(0, table.y - table.h / 2).toFixed(2);
-        }
-        updateChairsAndDraw();
-    }
-
-    function onPointerUp(e) {
-        isPanning = false;
-        if (dragTarget) {
-            canvas.releasePointerCapture(e.pointerId);
-            dragTarget = null;
-        }
-    }
-
-    /* ─── RENDER ─── */
-    function draw() {
-        ctx.fillStyle = '#0D1117';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        const minW_X = -offsetX / (PPM * scale);
-        const maxW_X = (canvas.width - RULER - offsetX) / (PPM * scale);
-        const minW_Y = -offsetY / (PPM * scale);
-        const maxW_Y = (canvas.height - RULER - offsetY) / (PPM * scale);
-
-        drawGrid(minW_X, maxW_X, minW_Y, maxW_Y);
-
-        ctx.save();
-        ctx.rect(RULER, RULER, canvas.width - RULER, canvas.height - RULER);
-        ctx.clip();
-        ctx.translate(RULER + offsetX, RULER + offsetY);
-        ctx.scale(scale, scale);
-
-        // Draw Room Boundary Box
-        ctx.fillStyle = 'rgba(255,255,255,0.015)';
-        ctx.fillRect(0, 0, room.w * PPM, room.h * PPM);
-        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-        ctx.lineWidth = 1.5 / scale;
-        ctx.setLineDash([5 / scale, 5 / scale]);
-        ctx.strokeRect(0, 0, room.w * PPM, room.h * PPM);
-        ctx.setLineDash([]);
-
-        drawFOV();
-        drawTableAndChairs();
-        drawCamera();
-        
-        ctx.restore();
-
-        drawRulers(minW_X, maxW_X, minW_Y, maxW_Y);
-    }
-
-    function drawGrid(minX, maxX, minY, maxY) {
-        ctx.save();
-        ctx.rect(RULER, RULER, canvas.width - RULER, canvas.height - RULER);
-        ctx.clip();
-
-        // 0.5m lines
-        ctx.strokeStyle = 'rgba(255,255,255,0.028)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        let startGridX = Math.floor(minX / 0.5) * 0.5;
-        for(let wx = startGridX; wx <= maxX; wx += 0.5) {
-            let sx = RULER + offsetX + wx * PPM * scale;
-            ctx.moveTo(sx, RULER); ctx.lineTo(sx, canvas.height);
-        }
-        let startGridY = Math.floor(minY / 0.5) * 0.5;
-        for(let wy = startGridY; wy <= maxY; wy += 0.5) {
-            let sy = RULER + offsetY + wy * PPM * scale;
-            ctx.moveTo(RULER, sy); ctx.lineTo(canvas.width, sy);
-        }
-        ctx.stroke();
-        
-        // 1.0m lines
-        ctx.strokeStyle = 'rgba(255,255,255,0.055)';
-        ctx.beginPath();
-        let startGridX2 = Math.floor(minX / 1.0) * 1.0;
-        for(let wx = startGridX2; wx <= maxX; wx += 1.0) {
-            let sx = RULER + offsetX + wx * PPM * scale;
-            ctx.moveTo(sx, RULER); ctx.lineTo(sx, canvas.height);
-        }
-        let startGridY2 = Math.floor(minY / 1.0) * 1.0;
-        for(let wy = startGridY2; wy <= maxY; wy += 1.0) {
-            let sy = RULER + offsetY + wy * PPM * scale;
-            ctx.moveTo(RULER, sy); ctx.lineTo(canvas.width, sy);
-        }
-        ctx.stroke();
-
-        ctx.restore();
-    }
-
-    function drawRulers(minX, maxX, minY, maxY) {
-        ctx.fillStyle = '#121820';
-        ctx.fillRect(0, 0, canvas.width, RULER);
-        ctx.fillRect(0, 0, RULER, canvas.height);
-
-        ctx.fillStyle = '#0D1117';
-        ctx.fillRect(0, 0, RULER, RULER);
-
-        ctx.strokeStyle = 'rgba(255,255,255,0.07)';
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(RULER, 0); ctx.lineTo(RULER, canvas.height); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, RULER); ctx.lineTo(canvas.width, RULER); ctx.stroke();
-
-        // Origin Arrows
-        if (offsetX > 0 && offsetY > 0) {
-            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.font = '10px "JetBrains Mono", monospace';
-            
-            ctx.beginPath(); ctx.moveTo(RULER, RULER); ctx.lineTo(RULER + 12, RULER); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(RULER + 12, RULER); ctx.lineTo(RULER + 8, RULER - 3); ctx.lineTo(RULER + 8, RULER + 3); ctx.fill();
-            ctx.fillText("X", RULER + 20, RULER + 3);
-
-            ctx.beginPath(); ctx.moveTo(RULER, RULER); ctx.lineTo(RULER, RULER + 12); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(RULER, RULER + 12); ctx.lineTo(RULER - 3, RULER + 8); ctx.lineTo(RULER + 3, RULER + 8); ctx.fill();
-            ctx.fillText("Y", RULER + 8, RULER + 22);
-        }
-
-        ctx.fillStyle = '#6B7588';
-        ctx.font = '10px "JetBrains Mono", monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // X Ruler
-        let startX = Math.floor(minX / 0.5) * 0.5;
-        for(let wx = startX; wx <= maxX; wx += 0.5) {
-            let px = RULER + offsetX + wx * PPM * scale;
-            if (px < RULER) continue;
-            
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(px, RULER - 6); ctx.lineTo(px, RULER); ctx.stroke();
-            
-            if (Math.abs(wx % 1.0) < 0.01 || Math.abs(Math.abs(wx % 1.0) - 1.0) < 0.01 || Math.abs(wx) < 0.01) {
-                ctx.fillText(Math.abs(wx) < 0.01 ? "0.0" : wx.toFixed(1), px, RULER / 2);
-            }
-        }
-
-        // Y Ruler
-        ctx.textAlign = 'right';
-        let startY = Math.floor(minY / 0.5) * 0.5;
-        for(let wy = startY; wy <= maxY; wy += 0.5) {
-            let py = RULER + offsetY + wy * PPM * scale;
-            if (py < RULER) continue;
-
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(RULER - 6, py); ctx.lineTo(RULER, py); ctx.stroke();
-            
-            if (Math.abs(wy % 1.0) < 0.01 || Math.abs(Math.abs(wy % 1.0) - 1.0) < 0.01 || Math.abs(wy) < 0.01) {
-                ctx.fillText(Math.abs(wy) < 0.01 ? "0.0" : wy.toFixed(1), RULER - 9, py);
-            }
-        }
-    }
-
-    function drawFOV() {
-        const cx = cam.x * PPM;
-        const cy = cam.y * PPM;
-        const rDefault = 2000;
-        const angleRad = (cam.rot * Math.PI) / 180;
-        const fovRad = (cam.hfov * Math.PI) / 180;
-        const startAngle = angleRad - fovRad / 2;
-        const endAngle = angleRad + fovRad / 2;
-
-        if (cam.audioRadius) {
-            const ar = cam.audioRadius * PPM;
-            ctx.fillStyle = 'rgba(245, 158, 11, 0.04)'; 
-            ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
-            ctx.lineWidth = 1.5 / scale;
-            ctx.setLineDash([8 / scale, 6 / scale]);
-            ctx.beginPath();
-            
-            const arcStart = angleRad - Math.PI/2;
-            const arcEnd = angleRad + Math.PI/2;
-            
-            ctx.moveTo(cx, cy);
-            ctx.arc(cx, cy, ar, arcStart, arcEnd);
-            ctx.closePath();
-            
-            ctx.fill();
-            ctx.stroke();
-            ctx.setLineDash([]);
-        }
-
-        if (cam.dofMax) {
-            const dofMaxPx = cam.dofMax === Infinity ? 30 * PPM : cam.dofMax * PPM; 
-            const visualMax = Math.min(dofMaxPx, 30 * PPM);
-
-            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, visualMax);
-            grad.addColorStop(0, 'rgba(25,103,210,0.3)');
-            grad.addColorStop(1, 'rgba(25,103,210,0)');
-
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.arc(cx, cy, dofMaxPx, startAngle, endAngle);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        ctx.strokeStyle = 'rgba(59,130,246,0.45)';
-        ctx.lineWidth = 1.5 / scale;
-        ctx.setLineDash([6 / scale, 5 / scale]);
-        ctx.beginPath();
-        ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(startAngle) * rDefault, cy + Math.sin(startAngle) * rDefault);
-        ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(endAngle) * rDefault, cy + Math.sin(endAngle) * rDefault);
-        ctx.stroke();
-        ctx.setLineDash([]);
-    }
-
-    function drawTableAndChairs() {
-        chairs.forEach(c => {
-            const cx = c.x * PPM;
-            const cy = c.y * PPM;
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.rotate((c.angle * Math.PI) / 180);
-
-            if (c.inside) {
-                ctx.strokeStyle = 'rgba(16,185,129,0.9)';
-                ctx.fillStyle = 'rgba(16,185,129,0.12)';
-            } else {
-                ctx.strokeStyle = 'rgba(239,68,68,0.5)';
-                ctx.fillStyle = 'rgba(239,68,68,0.05)';
-            }
-
-            ctx.lineWidth = 1.8 / scale;
-            ctx.beginPath();
-            ctx.roundRect(-15, -15, 30, 30, 5);
-            ctx.fill();
-            ctx.stroke();
-
-            const sColor  = c.inside ? 'rgba(16,185,129,0.85)' : 'rgba(239,68,68,0.5)';
-            const sFill   = c.inside ? 'rgba(16,185,129,0.13)' : 'rgba(239,68,68,0.06)';
-
-            ctx.fillStyle   = sFill;
-            ctx.strokeStyle = sColor;
-            ctx.lineWidth   = 1.8 / scale;
-            ctx.beginPath();
-            ctx.roundRect(-11, -11, 22, 22, 4);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.fillStyle = sColor;
-            ctx.beginPath();
-            ctx.roundRect(-16, -11, 6, 22, 3);
-            ctx.fill();
-
-            ctx.restore();
-        });
-
-        const tx = (table.x - table.w / 2) * PPM;
-        const ty = (table.y - table.h / 2) * PPM;
-        const tw = table.w * PPM;
-        const th = table.h * PPM;
-
-        ctx.fillStyle = 'rgba(139,92,246,0.10)';
-        ctx.strokeStyle = 'rgba(139,92,246,0.7)';
-        ctx.lineWidth = 2 / scale;
-        ctx.beginPath();
-        ctx.roundRect(tx, ty, tw, th, 10);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.save();
-        ctx.translate(tx + tw / 2, ty + th / 2);
-        ctx.fillStyle = 'rgba(196,181,253,0.85)';
-        // גודל הטקסט נשאר סטטי על המסך ע"י ביטול הסקייל הנוכחי
-        ctx.scale(1/scale, 1/scale);
-        ctx.font = 'bold 12px "JetBrains Mono", monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`${table.w}m × ${table.h}m`, 0, 0);
-        ctx.restore();
-    }
-
-    function drawCamera() {
-        const cx = cam.x * PPM;
-        const cy = cam.y * PPM;
-
-        ctx.strokeStyle = 'rgba(59,130,246,0.2)';
-        ctx.lineWidth = 8 / scale;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 18, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.fillStyle = '#1967D2';
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-        ctx.lineWidth = 2 / scale;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 11, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2.5 / scale;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(
-            cx + Math.cos((cam.rot * Math.PI) / 180) * 14,
-            cy + Math.sin((cam.rot * Math.PI) / 180) * 14
-        );
-        ctx.stroke();
-        ctx.lineCap = 'butt';
-    }
-
-    init();
-</script>
 </body>
 </html>
