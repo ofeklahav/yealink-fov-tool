@@ -64,6 +64,13 @@
     ]
   },
   {
+    "name": "UVC84",
+    "supports_avhub": true,
+    "lenses": [
+      { "label": "PTZ", "hfov": 73, "dof": "1m - Infinity", "audio_pickup_range": "N/A (Supports external mics)" }
+    ]
+  },
+  {
     "name": "UVC85",
     "supports_avhub": true,
     "lenses": [
