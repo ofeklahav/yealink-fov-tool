@@ -1,0 +1,811 @@
+{
+  "all_in_one_meetingbars": [
+    {
+      "name": "MeetingBar A10",
+      "interfaces": [
+        "1 x HDMI Out (CEC)",
+        "1 x USB 2.0 Type-A",
+        "1 x USB-C (Content Sharing)",
+        "1 x 3.5mm Line In/Out",
+        "1 x 10/100/1000M Ethernet",
+        "1 x Yealink VCH (RJ-45)",
+        "1 x Power Port",
+        "1 x Security Lock Slot",
+        "1 x Reset Slot"
+      ],
+      "pickup_range": "4.5m (360°)"
+    },
+    {
+      "name": "MeetingBar A20",
+      "interfaces": [
+        "2 x HDMI Out",
+        "1 x USB 2.0 Type-A",
+        "1 x 10/100/1000M Ethernet",
+        "1 x Yealink VCH (RJ-45)",
+        "1 x Power Port",
+        "1 x Security Lock Slot",
+        "1 x Reset Slot"
+      ],
+      "pickup_range": "6m (360°)"
+    },
+    {
+      "name": "MeetingBar A25",
+      "interfaces": [
+        "1 x HDMI Out",
+        "1 x USB 2.0 Type-A",
+        "1 x USB 2.0 Type-C (Side)",
+        "1 x USB 3.0 Type-C (Video Input)",
+        "1 x 10/100/1000M Ethernet",
+        "1 x Yealink VCH (RJ-45)",
+        "1 x 3.5mm Line-Out",
+        "1 x Power Port",
+        "1 x Security Lock Slot",
+        "1 x Reset Slot"
+      ],
+      "pickup_range": "5m (360°)"
+    },
+    {
+      "name": "MeetingBar A30",
+      "interfaces": [
+        "2 x HDMI Out",
+        "2 x USB 2.0 Type-A",
+        "1 x 3.5mm Line-Out",
+        "1 x 10/100/1000M Ethernet",
+        "1 x Yealink VCH (RJ-45)",
+        "1 x Power Port",
+        "1 x Security Lock Slot",
+        "1 x Reset Slot"
+      ],
+      "pickup_range": "6m (360°)"
+    },
+    {
+      "name": "MeetingBar A40",
+      "interfaces": [
+        "2 x HDMI Out",
+        "1 x USB 2.0 Type-A",
+        "2 x USB 2.0 Type-C",
+        "1 x USB 3.0 Type-C",
+        "1 x 10/100/1000M Ethernet",
+        "1 x Yealink VCH (RJ-45)",
+        "1 x 3.5mm Line In/Out",
+        "1 x Power Port",
+        "1 x Security Lock Slot",
+        "1 x Reset Slot"
+      ],
+      "pickup_range": "6m (360°)"
+    },
+    {
+      "name": "MeetingBar A50",
+      "interfaces": [
+        "2 x HDMI Out",
+        "1 x USB 3.0 Type-A",
+        "1 x USB 3.0 Type-B",
+        "1 x USB 2.0 Type-C",
+        "1 x 10/100/1000M Ethernet",
+        "2 x Yealink VCH (RJ-45)",
+        "1 x 3.5mm Line In/Out",
+        "1 x Power Port",
+        "1 x Security Lock Slot",
+        "1 x Reset Slot"
+      ],
+      "pickup_range": "10m (360°)"
+    }
+  ],
+  "smart_cameras_and_video": [
+    {
+      "name": "SmartVision 40",
+      "interfaces": [
+        "1 x HDMI Out",
+        "1 x USB 3.0 Type-B",
+        "1 x USB 2.0 Type-A",
+        "1 x USB-C Port",
+        "1 x Yealink VCH (RJ-45)",
+        "1 x 3.5mm Line In/Out",
+        "1 x Power Port",
+        "1 x Security Lock Slot",
+        "1 x Reset Slot"
+      ],
+      "pickup_range": "6m (360°)"
+    },
+    {
+      "name": "SmartVision 60",
+      "interfaces": [
+        "1 x USB 3.0 Type-B",
+        "1 x Yealink VCH (RJ-45)",
+        "1 x Power Port"
+      ],
+      "pickup_range": "6m (360°)"
+    },
+    {
+      "name": "SmartVision 80",
+      "interfaces": [
+        "1 x HDMI Out",
+        "1 x USB 3.0 Type-B",
+        "1 x USB 2.0 Type-A",
+        "2 x Yealink VCH (RJ-45)",
+        "1 x Gigabit Network Port (RJ-45)",
+        "1 x 3.5mm Line In",
+        "1 x 3.5mm Line Out",
+        "1 x DC Power Port",
+        "1 x Reset Button"
+      ],
+      "pickup_range": "N/A (Camera system - requires external microphones)"
+    },
+    {
+      "name": "MTower (360° Tabletop Camera)",
+      "interfaces": [
+        "1 x Yealink VCH (RJ-45)",
+        "1 x Camera Mute Button",
+        "2 x Mic Mute Buttons",
+        "1 x Reset Slot"
+      ],
+      "pickup_range": "3m quality / 6m voice pickup (360°)"
+    },
+    {
+      "name": "UVC30 / UVC30 Content Camera",
+      "interfaces": [
+        "1 x USB 2.0 Type-A/C Cable"
+      ],
+      "pickup_range": "N/A (Camera only)"
+    },
+    {
+      "name": "UVC34",
+      "interfaces": [
+        "1 x USB 2.0 Type-A",
+        "1 x USB 2.0 Type-B",
+        "1 x Yealink Mic Port (RJ-45)",
+        "1 x Power Port",
+        "1 x Security Lock Slot",
+        "1 x Reset Slot"
+      ],
+      "pickup_range": "5m (360°)"
+    },
+    {
+      "name": "UVC40 / UVC40 E2",
+      "interfaces": [
+        "1 x USB 3.0 Type-B",
+        "1 x USB 2.0 Type-A",
+        "1 x Mic/Ethernet Port (RJ-45)",
+        "1 x Power Port",
+        "1 x Security Lock Slot",
+        "1 x Reset Slot"
+      ],
+      "pickup_range": "6m (360°)"
+    },
+    {
+      "name": "UVC84",
+      "interfaces": [
+        "1 x USB 3.0 Type-B",
+        "1 x Yealink VCH (RJ-45)",
+        "1 x 3.5mm Line Out",
+        "1 x Power Port"
+      ],
+      "pickup_range": "N/A (Camera only)"
+    },
+    {
+      "name": "UVC85",
+      "interfaces": [
+        "1 x USB 3.0 Type-B",
+        "1 x USB 2.0 Type-A",
+        "1 x Internet Port (RJ-45)",
+        "1 x Yealink VCH Port",
+        "1 x HDMI Out",
+        "1 x 3.5mm Line In",
+        "1 x 3.5mm Line Out",
+        "1 x DC 48V Power Port",
+        "1 x Security Lock Slot",
+        "1 x Reset Hole"
+      ],
+      "pickup_range": "N/A (Camera only)"
+    },
+    {
+      "name": "UVC86 (Dual-eye)",
+      "interfaces": [
+        "1 x USB 3.0 Type-B",
+        "1 x USB 2.0 Type-A",
+        "1 x Yealink VCH Port (RJ-45)",
+        "1 x 3.5mm Line In",
+        "1 x HDMI Out",
+        "1 x Power Port",
+        "1 x Security Lock Slot",
+        "1 x Reset Slot"
+      ],
+      "pickup_range": "N/A (Camera only)"
+    },
+    {
+      "name": "MB-12X Pro",
+      "interfaces": [
+        "Yealink Custom Port (Direct MeetingBoard Pro Attachment)"
+      ],
+      "pickup_range": "N/A (Optical Zoom Module)"
+    },
+    {
+      "name": "MB-CAM-6X / MB-CAM-12X",
+      "interfaces": [
+        "Yealink Custom Port (Direct MeetingBoard Attachment)"
+      ],
+      "pickup_range": "N/A (Optical Zoom Modules)"
+    }
+  ],
+  "interactive_displays_and_boards": [
+    {
+      "name": "MeetingBoard (65\", 86\")",
+      "interfaces": [
+        "1 x HDMI Out (CEC)",
+        "1 x HDMI In",
+        "2 x RCA Audio In",
+        "2 x RCA Audio Out",
+        "1 x Yealink VCH Port (RJ-45)",
+        "2 x USB 3.0 Type-A",
+        "1 x USB 2.0 Type-A",
+        "1 x USB 2.0 Type-B Touch Out",
+        "1 x 10/100/1000M Ethernet",
+        "1 x Detachable PTZ Camera Port",
+        "1 x Windows OPS Slot"
+      ],
+      "pickup_range": "8m full-duplex (360°)"
+    },
+    {
+      "name": "MeetingBoard Pro (65\", 75\", 86\")",
+      "interfaces": [
+        "1 x HDMI Out (CEC)",
+        "1 x HDMI In",
+        "1 x Pair RCA Line In",
+        "1 x Pair RCA Line Out",
+        "3 x USB 2.0 Type-A",
+        "2 x 10/100/1000M Ethernet",
+        "2 x Yealink VCH Ports (RJ-45)",
+        "1 x Windows OPS Slot",
+        "1 x USB 2.0 Type-B Touch Out",
+        "1 x Pluggable Camera Module Port",
+        "1 x AC Power Interface"
+      ],
+      "pickup_range": "12m full-duplex (360°)"
+    },
+    {
+      "name": "MeetingBoard C EDLA (65\", 75\")",
+      "interfaces": [
+        "1 x HDMI Out",
+        "1 x HDMI In",
+        "1 x 3.5mm Line In",
+        "1 x 3.5mm Line Out",
+        "3 x USB 2.0 Type-A",
+        "1 x 10/100/1000M Ethernet",
+        "1 x Yealink VCH Port (RJ-45)",
+        "1 x Windows OPS Slot",
+        "1 x USB 2.0 Type-B Touch Out",
+        "1 x AC Power Interface"
+      ],
+      "pickup_range": "8m full-duplex (360°)"
+    },
+    {
+      "name": "DeskVision A24",
+      "interfaces": [
+        "1 x HDMI In",
+        "1 x USB-C 3.0 Upstream (DP-In, 45W PD)",
+        "1 x USB-C 3.0 Downstream",
+        "2 x USB-A 3.0 Downstream",
+        "1 x USB-A 2.0 Downstream (Headphones)",
+        "1 x DC 19V Power Port",
+        "1 x Ethernet (RJ-45)",
+        "Qi Wireless Charging Pad"
+      ],
+      "pickup_range": "12m full-duplex (360°)"
+    },
+    {
+      "name": "MeetingDisplay (65\", 75\", 86\")",
+      "interfaces": [
+        "3 x HDMI In 2.1",
+        "1 x 3.5mm Stereo Mini Jack (Audio Out)",
+        "2 x USB 2.0 Type-A",
+        "1 x USB 2.0 Type-B",
+        "2 x 10/100/1000M Ethernet (RJ-45)",
+        "1 x RS232",
+        "1 x Reset Port"
+      ],
+      "pickup_range": "N/A (Display with 2 x 12W built-in speakers)"
+    },
+    {
+      "name": "ETV65 / ETV86",
+      "interfaces": [
+        "Yealink Extension Display Interface / HDMI In"
+      ],
+      "pickup_range": "N/A (Extension Display)"
+    }
+  ],
+  "audio_solutions": {
+    "wired_microphones": [
+      {
+        "name": "VCM34",
+        "interfaces": [
+          "1 x RJ-45 Ethernet (Cascading)"
+        ],
+        "pickup_range": "6m (360°)"
+      },
+      {
+        "name": "VCM35",
+        "interfaces": [
+          "1 x RJ-45 Ethernet Connector"
+        ],
+        "pickup_range": "5m (360°)"
+      },
+      {
+        "name": "VCM38 (Ceiling Wired)",
+        "interfaces": [
+          "1 x RJ-45 Ethernet Port (PoE)"
+        ],
+        "pickup_range": "8m radius (360°)"
+      }
+    ],
+    "wireless_microphones": [
+      {
+        "name": "VCM36-W (Wi-Fi)",
+        "interfaces": [
+          "Wi-Fi (2.4GHz/5GHz)",
+          "Wireless Charging Cradle",
+          "USB-C Port"
+        ],
+        "pickup_range": "6m (360°)"
+      },
+      {
+        "name": "CPW90",
+        "interfaces": [
+          "DECT Wireless",
+          "Charging Cradle Port",
+          "Micro-USB"
+        ],
+        "pickup_range": "3m radius (360°)"
+      },
+      {
+        "name": "CPW90-BT",
+        "interfaces": [
+          "Bluetooth Wireless",
+          "Micro-USB"
+        ],
+        "pickup_range": "3m radius (360°)"
+      },
+      {
+        "name": "CPW65 (DECT)",
+        "interfaces": [
+          "DECT Wireless (1.8/1.9GHz)",
+          "360° Charging Cradle",
+          "Micro-USB Port"
+        ],
+        "pickup_range": "3m radius (360°)"
+      }
+    ],
+    "ceiling_microphones": [
+      {
+        "name": "CM20",
+        "interfaces": [
+          "1 x RJ-45 (PoE IEEE 802.3af Class 3 / Dante / AES67)"
+        ],
+        "pickup_range": "3.2m premium radius (30m²) / 4.5m effective radius (60m²)"
+      },
+      {
+        "name": "CM50 (Dante)",
+        "interfaces": [
+          "1 x RJ-45 (PoE+ IEEE 802.3at Class 4 / Dante / AES67)",
+          "1 x 3-pin Phoenix Connector (Analog Output)"
+        ],
+        "pickup_range": "5m radius (100m² coverage, 127 MEMS array)"
+      }
+    ],
+    "speakers": [
+      {
+        "name": "CS10",
+        "interfaces": [
+          "1 x RJ-45 (PoE+ IEEE 802.3at Class 4)"
+        ],
+        "coverage_angle": "120° Nominal Coverage Angle (24W / 99dB SPL)"
+      },
+      {
+        "name": "CS10-D (Dante)",
+        "interfaces": [
+          "1 x RJ-45 (Dante / PoE+ IEEE 802.3at Class 4)"
+        ],
+        "coverage_angle": "120° Nominal Coverage Angle (24W / 99dB SPL)"
+      },
+      {
+        "name": "MSpeaker II",
+        "interfaces": [
+          "1 x 3.5mm Line In",
+          "1 x VCH Port (RJ-45)",
+          "1 x Power Port"
+        ],
+        "coverage_angle": "Medium room audio coverage (10W)"
+      },
+      {
+        "name": "MSpeaker Pro",
+        "interfaces": [
+          "1 x VCH Port (PoE / PoE+ IEEE 802.3af/at)"
+        ],
+        "coverage_angle": "Medium/Large room audio coverage (24W / 95dB SPL max)"
+      }
+    ],
+    "integrated_audio_devices": [
+      {
+        "name": "CP50",
+        "interfaces": [
+          "1 x DC 48V Power Port",
+          "1 x Codec Port (RJ-45 to Camera/VC Host)",
+          "1 x Audio Port (RJ-45 to CPE40)",
+          "1 x USB Type-C Port (to PC)",
+          "Bluetooth 5.0"
+        ],
+        "pickup_range": "6m voice pickup (360°)"
+      },
+      {
+        "name": "CPE40",
+        "interfaces": [
+          "1 x Codec Port (RJ-45 to previous unit)",
+          "1 x Audio Port (RJ-45 to next CPE40)",
+          "1 x USB Type-C Port (Debugging)"
+        ],
+        "pickup_range": "6m voice pickup (360°)"
+      },
+      {
+        "name": "MSpeech",
+        "interfaces": [
+          "1 x USB Type-A Cable",
+          "1 x Power Port"
+        ],
+        "pickup_range": "6m voice pickup (360°)"
+      },
+      {
+        "name": "CP965",
+        "interfaces": [
+          "1 x 10/100M Ethernet (PoE)",
+          "2 x Wired Mic Ports",
+          "1 x USB 2.0 Type-A",
+          "1 x USB 2.0 Type-C",
+          "Bluetooth 4.2",
+          "Wi-Fi"
+        ],
+        "pickup_range": "6m voice pickup (360°)"
+      },
+      {
+        "name": "CPE95",
+        "interfaces": [
+          "1 x RJ-45 Connector"
+        ],
+        "pickup_range": "3m radius (360°)"
+      }
+    ]
+  },
+  "mini_pcs_and_processing_units": [
+    {
+      "name": "MCore / MCore Pro",
+      "interfaces": [
+        "2 x HDMI Out",
+        "1 x MTouch Port (RJ-45)",
+        "4 x USB 3.0 Type-A",
+        "1 x 10/100/1000M Ethernet",
+        "1 x Power Port",
+        "1 x Security Slot"
+      ]
+    },
+    {
+      "name": "MCore Lite",
+      "interfaces": [
+        "1 x HDMI 2.0 Out",
+        "1 x MTouch Port (RJ-45)",
+        "4 x USB 3.0 Type-A",
+        "1 x 10/100/1000M Ethernet",
+        "1 x Power Port",
+        "1 x Security Slot"
+      ]
+    },
+    {
+      "name": "MCore 4",
+      "interfaces": [
+        "1 x HDMI 2.1 Out",
+        "2 x HDMI 2.0 Out",
+        "1 x HDMI In",
+        "4 x USB 3.0 Type-A",
+        "1 x MTouch Port (RJ-45)",
+        "1 x LAN Port for AV Network",
+        "1 x 10/100/1000M Ethernet",
+        "1 x 3.5mm Headphone Port",
+        "1 x Power Port",
+        "1 x Reset Port",
+        "1 x Security Slot"
+      ]
+    },
+    {
+      "name": "MCore-OPS (including T, i7, G2, G2T)",
+      "interfaces": [
+        "1 x MTouch Port (RJ-45)",
+        "1 x HDMI Out",
+        "2 x USB 3.0 Type-A",
+        "1 x USB 3.0 Type-C",
+        "OPS Custom Bus Connector"
+      ]
+    }
+  ],
+  "control_panels_remotes_and_sensors": {
+    "touch_consoles": [
+      {
+        "name": "CTP18",
+        "interfaces": [
+          "1 x USB-C (Debugging)",
+          "1 x RJ-45 Ethernet (PoE 802.3af)"
+        ]
+      },
+      {
+        "name": "CTP25",
+        "interfaces": [
+          "1 x USB-A Port",
+          "2 x USB-C Ports (Wired Sharing / BYOD / 45W-60W PD Charging)",
+          "1 x RJ-45 Port (PoE 802.3af)",
+          "1 x Reset Hole"
+        ]
+      },
+      {
+        "name": "CTP28",
+        "interfaces": [
+          "1 x RJ-45 Ethernet (PoE)",
+          "1 x USB-C"
+        ]
+      },
+      {
+        "name": "MTouch II",
+        "interfaces": [
+          "1 x 3.5mm Headset Jack",
+          "1 x USB-C (HDMI/USB Video Input)",
+          "1 x RJ-45"
+        ]
+      },
+      {
+        "name": "MTouch E2",
+        "interfaces": [
+          "1 x 3.5mm Headset Jack",
+          "1 x USB-C / HDMI Video Input",
+          "1 x RJ-45"
+        ]
+      },
+      {
+        "name": "MTouch Plus",
+        "interfaces": [
+          "1 x MCore Pro VCH Port",
+          "1 x USB 2.0 Type-C Port",
+          "1 x USB 2.0 Type-C PD Port",
+          "1 x 3.5mm Headset Port",
+          "2 x USB 2.0 Type-A Ports",
+          "1 x Ext Touch Port (RJ-45)"
+        ]
+      },
+      {
+        "name": "MTouch Plus-EXT",
+        "interfaces": [
+          "1 x USB Type-C Debug Port",
+          "1 x PoE Power Port (RJ-45)"
+        ]
+      }
+    ],
+    "remote_controllers": [
+      {
+        "name": "VCR11",
+        "interfaces": [
+          "IR / Wireless Remote (2 x AAA Batteries)"
+        ]
+      },
+      {
+        "name": "VCR20",
+        "interfaces": [
+          "IR / Wireless Remote (2 x AAA Batteries)"
+        ]
+      },
+      {
+        "name": "MB-Remote",
+        "interfaces": [
+          "2.4GHz Private Protocol Wireless (USB Dongle Receiver)"
+        ]
+      },
+      {
+        "name": "MD-Remote",
+        "interfaces": [
+          "IR Remote Control"
+        ]
+      }
+    ],
+    "room_scheduling_panels": [
+      {
+        "name": "RoomPanel E2",
+        "interfaces": [
+          "1 x 10/100M Ethernet (PoE 802.3af)",
+          "1 x USB-C Port",
+          "1 x 12V DC Power Port",
+          "1 x Reset Pinhole",
+          "RFID/NFC (13.56MHz)",
+          "Bluetooth 5.0",
+          "Wi-Fi"
+        ]
+      },
+      {
+        "name": "RoomPanel Plus E2",
+        "interfaces": [
+          "1 x 10/100M Ethernet (PoE 802.3af)",
+          "1 x USB-A Port",
+          "1 x 12V DC Power Port",
+          "1 x Reset Pinhole",
+          "RFID/NFC (13.56MHz)",
+          "Bluetooth 5.0",
+          "Wi-Fi"
+        ]
+      }
+    ],
+    "sensors": [
+      {
+        "name": "RoomSensor",
+        "interfaces": [
+          "Bluetooth BLE 5.2 (Wireless connection to RoomPanel/MTouch)"
+        ]
+      },
+      {
+        "name": "RoomSensor Pro",
+        "interfaces": [
+          "Bluetooth BLE 5.2 Wireless"
+        ]
+      },
+      {
+        "name": "YPS20 (Partition Sensor)",
+        "interfaces": [
+          "IR Diffuse Reflection Sensor",
+          "10m Connection Cable to AP08 GPIO Interface"
+        ]
+      }
+    ]
+  },
+  "adapters_switches_and_infrastructure": {
+    "wireless_presentation": [
+      {
+        "name": "WPP20",
+        "interfaces": [
+          "USB 2.0 Type-A",
+          "Built-in Wi-Fi AP"
+        ]
+      },
+      {
+        "name": "WPP30",
+        "interfaces": [
+          "1 x Full-featured USB Type-C",
+          "1 x USB-C to USB-A Adapter"
+        ]
+      },
+      {
+        "name": "PA20",
+        "interfaces": [
+          "1 x Full-featured USB Type-C",
+          "1 x USB-C to USB-A Adapter"
+        ]
+      }
+    ],
+    "audio_video_processors": [
+      {
+        "name": "AVHub",
+        "interfaces": [
+          "2 x USB-A Ports",
+          "1 x USB-B Port",
+          "1 x Codec Port",
+          "7 x Yealink VCH Ports (RJ-45)",
+          "1 x RCA In/Out Port",
+          "1 x 6.3mm Line In Port",
+          "1 x 6.3mm Line Out Port",
+          "1 x Power Supply Port"
+        ]
+      },
+      {
+        "name": "AP08 (DSP)",
+        "interfaces": [
+          "16 x 16 Dante Channels (3 x RJ-45 LAN Ports)",
+          "2 x RCA Analog Inputs",
+          "2 x RCA Analog Outputs",
+          "2 x 3-pin Phoenix Balanced Analog Inputs",
+          "2 x 3-pin Phoenix Balanced Analog Outputs",
+          "1 x 8-pin Phoenix GPIO Input (1-8)",
+          "1 x 8-pin Phoenix GPIO Output (1-8)",
+          "1 x 3-pin Phoenix RS232 Port",
+          "2 x USB 3.0 Type-B Device Interfaces",
+          "1 x RJ-45 MGMT Port",
+          "AC Power Port (100-240V)"
+        ]
+      },
+      {
+        "name": "AVBridge",
+        "interfaces": [
+          "4 x 4 Dante Channels",
+          "1 x 3-pin Phoenix Analog Input",
+          "1 x 5-pin Phoenix Analog Output",
+          "1 x USB-B Port (A/V to USB)",
+          "1 x RJ-45 LAN (PoE)"
+        ]
+      }
+    ],
+    "byod_and_wired_sharing": [
+      {
+        "name": "VCH51",
+        "interfaces": [
+          "1 x 100Mbps RJ-45 Port (PoE IEEE 802.3af)",
+          "1 x USB 2.0 Type-A",
+          "1 x USB 2.0 Type-C (DP Video Input)",
+          "1 x HDMI Video Input"
+        ]
+      },
+      {
+        "name": "VCH51 Pro",
+        "interfaces": [
+          "1 x 1000Mbps RJ-45 Port (PoE IEEE 802.3af)",
+          "1 x USB 2.0 Type-C (DP Video Input / 65W PD)",
+          "1 x PD Power Port"
+        ]
+      },
+      {
+        "name": "MShare",
+        "interfaces": [
+          "1 x HDMI Video Input",
+          "1 x Mini-DP Video Input",
+          "1 x USB 2.0 Type-B Port",
+          "1 x USB 2.0 Type-A Port"
+        ]
+      },
+      {
+        "name": "MShare E2",
+        "interfaces": [
+          "1 x USB Type-B (Female)",
+          "1 x HDMI In (Female)",
+          "1 x USB-C In (Female)",
+          "LED Bi-color Status Light"
+        ]
+      },
+      {
+        "name": "BYOD-Extender",
+        "interfaces": [
+          "1 x 1.5m USB 2.0 Type-A Cable",
+          "1 x RJ-45 Port (up to 100m deployment via CAT5e)"
+        ]
+      },
+      {
+        "name": "BYOD BOX",
+        "interfaces": [
+          "3 x USB 3.0 Type-A (Female)",
+          "1 x HDMI Port (Female)",
+          "1 x RJ-45 Port (Female)",
+          "1 x USB Type-C (Female, Power Supply)",
+          "1 x USB Gen2 Type-C (Male) with Type-A Adapter"
+        ]
+      },
+      {
+        "name": "USB Connector",
+        "interfaces": [
+          "1 x 1.5m USB Type-C Cable"
+        ]
+      }
+    ],
+    "network_and_extenders": [
+      {
+        "name": "RCH40 / RCH40 E2",
+        "interfaces": [
+          "4 x 10/100/1000Mbps Downlink Ports (PoE+ 802.3af/at, 30W/port)",
+          "1 x 10/100/1000Mbps Uplink Port",
+          "DC 48V Power Port (90W Budget)"
+        ]
+      },
+      {
+        "name": "YL PoE30",
+        "interfaces": [
+          "1 x PoE Out Port (RJ-45)",
+          "1 x LAN In Port (RJ-45)",
+          "AC Power Port"
+        ]
+      },
+      {
+        "name": "USB Extender",
+        "interfaces": [
+          "Transmitter: 1 x 0.1m USB Type-A Cable, 1 x RJ-45 Port, 48V DC Power Port",
+          "Receiver: 1 x RJ-45 Port, 2 x USB Type-A Ports"
+        ]
+      }
+    ]
+  }
+}
