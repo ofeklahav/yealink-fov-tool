@@ -92,21 +92,23 @@
 
                 
                 <!-- Display Toggles -->
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 13px; color: var(--text-2);">כיסוי מצלמה:</span>
-                    <div class="segment-control" id="fovDisplaySegment" style="margin: 0; min-width: 140px;">
-                        <button type="button" class="segment-btn active" data-val="fill">מלא</button>
-                        <button type="button" class="segment-btn" data-val="outline">מסגרת</button>
-                        <button type="button" class="segment-btn" data-val="hidden">מוסתר</button>
+                <div id="fovTogglesWrap" style="display: flex; gap: 16px; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 13px; color: var(--text-2);">כיסוי מצלמה:</span>
+                        <div class="segment-control" id="fovDisplaySegment" style="margin: 0; min-width: 140px;">
+                            <button type="button" class="segment-btn active" data-val="fill">מלא</button>
+                            <button type="button" class="segment-btn" data-val="outline">מסגרת</button>
+                            <button type="button" class="segment-btn" data-val="hidden">מוסתר</button>
+                        </div>
                     </div>
-                </div>
 
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 13px; color: var(--text-2);">כיסוי מיקרופון:</span>
-                    <div class="segment-control" id="micDisplaySegment" style="margin: 0; min-width: 140px;">
-                        <button type="button" class="segment-btn active" data-val="fill">מלא</button>
-                        <button type="button" class="segment-btn" data-val="outline">מסגרת</button>
-                        <button type="button" class="segment-btn" data-val="hidden">מוסתר</button>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 13px; color: var(--text-2);">כיסוי מיקרופון:</span>
+                        <div class="segment-control" id="micDisplaySegment" style="margin: 0; min-width: 140px;">
+                            <button type="button" class="segment-btn active" data-val="fill">מלא</button>
+                            <button type="button" class="segment-btn" data-val="outline">מסגרת</button>
+                            <button type="button" class="segment-btn" data-val="hidden">מוסתר</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -121,26 +123,88 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
                     </button>
                 </div>
-                <button class="nav-btn active" data-view="canvas">Room Canvas</button>
-                <button class="nav-btn" data-view="topology" style="background: var(--surface-2); border: 1px solid var(--border-med); padding: 4px 12px; border-radius: 6px; font-size: 13px;">Topology</button>
-                <button class="nav-btn" data-view="export" style="background: var(--primary); color: white; border: 1px solid var(--primary); padding: 4px 12px; border-radius: 6px; font-size: 13px;">Export</button>
+                <button class="nav-btn active" data-view="canvas">תצוגת חדר</button>
+                <button class="nav-btn" data-view="topology">תצוגת חיבורים</button>
+                <button class="nav-btn" data-view="export" style="background: var(--primary); color: white; border: 1px solid var(--primary); padding: 4px 12px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px;" title="שיתוף">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>שיתוף</span>
+                </button>
             </div>
         </div>
         <div class="canvas-container" id="canvasContainer">
             <canvas id="roomCanvas"></canvas>
-            <div class="canvas-controls">
+        </div>
+        
+        <div class="topology-container" id="topologyView" style="display: none; padding: 20px; overflow-y: auto;">
+            <div style="display: flex; gap: 20px; height: 100%; max-width: 1200px; margin: 0 auto;">
+                
+                <!-- Left Pane: Paste Area & Guide -->
+                <div style="flex: 2; display: flex; flex-direction: column; gap: 16px;">
+                    <div style="background: var(--surface); border-radius: 12px; padding: 24px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                        <h2 style="margin: 0 0 8px 0; font-size: 18px; color: var(--text);">סרטוט חיבורים חכם</h2>
+                        <p style="margin: 0 0 16px 0; font-size: 14px; color: var(--text-2); line-height: 1.5;">
+                            השתמשו בכלים כמו ChatGPT או Mermaid.ai כדי ליצור דיאגרמת חיבורים באופן אוטומטי.<br>
+                            ערכו במידת הצורך והעתיקו את הפרומפט מהצד, בקשו מהבינה המלאכותית לייצר דיאגרמת חיבורים (Mermaid diagram), והדביקו כאן את התמונה שהתקבלה (Ctrl+V).<br>
+                            <strong>שימו לב:</strong> ייתכן ותאלצו להסביר ל-AI כיצד בדיוק המכשירים מתחברים.
+                        </p>
+                    </div>
+                    
+                    <div id="diagramPasteArea" tabindex="0" style="flex: 1; background: var(--surface-2); border-radius: 12px; border: 2px dashed var(--border-med); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; cursor: pointer; min-height: 400px; transition: border-color 0.2s;">
+                        <div id="diagramPastePlaceholder" style="text-align: center; color: var(--text-3); pointer-events: none;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px;">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                            <div style="font-size: 16px; font-weight: 500;">הדבק תמונה כאן (Ctrl+V)</div>
+                            <div style="font-size: 13px; margin-top: 4px;">או לחץ להעלאת קובץ</div>
+                        </div>
+                        <img id="diagramImagePreview" src="" alt="Diagram" style="display: none; max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;" />
+                        <button id="clearDiagramBtn" style="display: none; position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; backdrop-filter: blur(4px); font-family: var(--font);">מחק תמונה</button>
+                    </div>
+                </div>
 
-                <button id="btnZoomOut" title="Zoom Out (Mouse Wheel Down)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
-                <span id="zoomDisplay">100%</span>
-                <button id="btnZoomIn" title="Zoom In (Mouse Wheel Up)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
-                <button id="btnResetView" title="Center Room">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                </button>
+                <!-- Right Pane: Device List -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                    <div style="background: var(--surface); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3 style="margin: 0; font-size: 16px; color: var(--text);">פרומפט ל-AI</h3>
+                            <button id="copyDeviceListBtn" style="font-family: var(--font); background: var(--primary); color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                העתק פרומפט
+                            </button>
+                        </div>
+                        <textarea id="deviceListTextarea" style="flex: 1; width: 100%; background: var(--surface-2); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; color: var(--text-2); font-size: 13px; font-family: monospace; resize: none; outline: none;"></textarea>
+                        <div style="display: flex; flex-wrap: nowrap; gap: 6px; margin-top: 12px;">
+                            <button class="add-generic-btn" data-type="Generic Screen" style="font-family: var(--font); flex: 1; text-align: center; background: var(--surface-2); border: 1px solid var(--border-med); border-radius: 6px; padding: 5px 4px; font-size: 11px; cursor: pointer; color: var(--text); transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface-2)'">+ מסך כללי</button>
+                            <button class="add-generic-btn" data-type="Generic Projector" style="font-family: var(--font); flex: 1; text-align: center; background: var(--surface-2); border: 1px solid var(--border-med); border-radius: 6px; padding: 5px 4px; font-size: 11px; cursor: pointer; color: var(--text); transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface-2)'">+ מקרן כללי</button>
+                            <button class="add-generic-btn" data-type="Guest Computer" style="font-family: var(--font); flex: 1; text-align: center; background: var(--surface-2); border: 1px solid var(--border-med); border-radius: 6px; padding: 5px 4px; font-size: 11px; cursor: pointer; color: var(--text); transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface-2)'">+ מחשב אורח</button>
+                            <button class="add-generic-btn" data-type="Room Computer" style="font-family: var(--font); flex: 1; text-align: center; background: var(--surface-2); border: 1px solid var(--border-med); border-radius: 6px; padding: 5px 4px; font-size: 11px; cursor: pointer; color: var(--text); transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface-2)'">+ מחשב חדר</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
+        </div>
+
+        <div class="canvas-controls" style="z-index: 10;">
+            <button id="btnZoomOut" title="Zoom Out (Mouse Wheel Down)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+            <span id="zoomDisplay">100%</span>
+            <button id="btnZoomIn" title="Zoom In (Mouse Wheel Up)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+            <button id="btnResetView" title="Center Room">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </button>
         </div>
     </div>
 
@@ -467,7 +531,7 @@
         
         <div class="stats-panel" id="statsPanel" style="position: relative;">
             <div class="stats-headline" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>ניתוח כיסוי · Real-time</span>
+                <span>ניתוח כיסוי</span>
                 <button class="info-btn" id="legendTooltipBtn" title="מקרא צבעים וסימונים" type="button">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -565,6 +629,39 @@
         </div>
         <div class="modal-footer">
             <button class="modal-ok-btn" id="renameProjectOkBtn" type="button">שמור</button>
+        </div>
+    </div>
+</div>
+<!-- Custom Prompt Modal -->
+<div class="modal-overlay" id="promptModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title" id="promptModalTitle">הזן טקסט</span>
+            <button class="modal-close-btn" id="closePromptModalBtn" type="button">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label class="fl" id="promptModalLabel">ערך</label>
+                <input type="text" class="fi" id="promptModalInput">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-ok-btn" id="promptModalOkBtn" type="button">אישור</button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title" id="confirmModalTitle">אישור</span>
+            <button class="modal-close-btn" id="closeConfirmModalBtn" type="button">&times;</button>
+        </div>
+        <div class="modal-body" id="confirmModalMessage"></div>
+        <div class="modal-footer" style="gap: 10px;">
+            <button class="modal-ok-btn" id="confirmModalOkBtn" type="button">אישור</button>
+            <button class="modal-ok-btn" id="confirmModalCancelBtn" type="button" style="background: var(--surface-2); color: var(--text);">ביטול</button>
         </div>
     </div>
 </div>
