@@ -10,20 +10,27 @@ async function loadDevices() {
     try {
         const [res1, res2] = await Promise.all([
             fetch('devices.json'),
-            fetch('devices2.json').catch(e => { console.warn(e); return { json: () => ({}) }; })
+            fetch('devices2.json').catch(e => {
+                console.warn(e);
+                return {
+                    json: () => ({})
+                };
+            })
         ]);
-        
+
         cameras = await res1.json();
         cameras.forEach(c => c.device_type = 'camera');
         window.devicesData = [...cameras];
 
         let data2 = {};
-        try { data2 = await res2.json(); } catch(e) {}
+        try {
+            data2 = await res2.json();
+        } catch (e) {}
 
         if (data2.audio_solutions) {
             const mics = [];
             const speakers = [];
-            
+
             ['ceiling_microphones', 'wired_microphones', 'wireless_microphones'].forEach(cat => {
                 if (data2.audio_solutions[cat]) {
                     data2.audio_solutions[cat].forEach(d => {
@@ -49,7 +56,7 @@ async function loadDevices() {
                 }
             });
         }
-        
+
         window.availableMics = window.devicesData.filter(d => d.device_type === 'microphone');
         window.availableSpeakers = window.devicesData.filter(d => d.device_type === 'speaker');
         window.availableDisplays = window.devicesData.filter(d => d.device_type === 'display');
@@ -57,11 +64,17 @@ async function loadDevices() {
         window.availableOthers = [];
         const processCategory = (catData) => {
             if (Array.isArray(catData)) {
-                catData.forEach(d => { d.device_type = 'other'; window.availableOthers.push(d); });
+                catData.forEach(d => {
+                    d.device_type = 'other';
+                    window.availableOthers.push(d);
+                });
             } else if (typeof catData === 'object' && catData !== null) {
                 Object.values(catData).forEach(subCat => {
                     if (Array.isArray(subCat)) {
-                        subCat.forEach(d => { d.device_type = 'other'; window.availableOthers.push(d); });
+                        subCat.forEach(d => {
+                            d.device_type = 'other';
+                            window.availableOthers.push(d);
+                        });
                     }
                 });
             }
@@ -83,7 +96,7 @@ async function loadDevices() {
 function parseDoFMax(dofStr) {
     if (!dofStr || dofStr === "Not specified") return null;
     if (dofStr.includes("Infinity")) return Infinity;
-    
+
     let max = null;
     if (dofStr.includes("-")) {
         const parts = dofStr.split("-");
@@ -122,7 +135,7 @@ function parseAngle(angleStr) {
 }
 
 function parseDisplaySize(name) {
-    if (!name) return 1.44; 
+    if (!name) return 1.44;
     const match = name.match(/([\d.]+)\s*"/);
     if (match) {
         const inches = parseFloat(match[1]);
@@ -173,13 +186,28 @@ const rotVal = document.getElementById('rotVal');
 let fovDisplayMode = 'fill'; // 'fill', 'outline', 'hidden'
 let micDisplayMode = 'fill'; // 'fill', 'outline', 'hidden'
 
-let room = { w: 4.8, h: 5.4 };
-let table = { x: 2.4, y: 3.0, w: 1.4, h: 2.4 };
+let room = {
+    w: 4.8,
+    h: 5.4
+};
+let table = {
+    x: 2.4,
+    y: 3.0,
+    w: 1.4,
+    h: 2.4
+};
 let tableShape = 'rectangular';
 let isSnappedX = false;
 let isSnappedY = false;
 let selectedObject = null;
-let cam = { x: 2.4, y: 0.1, rot: 90, hfov: 110, dofMax: null, audioRadius: null };
+let cam = {
+    x: 2.4,
+    y: 0.1,
+    rot: 90,
+    hfov: 110,
+    dofMax: null,
+    audioRadius: null
+};
 let chairs = [];
 
 let multiCamEnabled = false;
@@ -199,8 +227,14 @@ let offsetY = 0;
 // Interaction State
 let dragTarget = null;
 let isPanning = false;
-let dragOffset = { x: 0, y: 0 };
-let lastMouse = { x: 0, y: 0 };
+let dragOffset = {
+    x: 0,
+    y: 0
+};
+let lastMouse = {
+    x: 0,
+    y: 0
+};
 
 // ── Camera & Lens Selection ──
 let selectedCamIdx = -1; // No camera by default
@@ -237,10 +271,25 @@ class StateManager {
             id: Date.now().toString(),
             name: name,
             createdAt: new Date().toISOString(),
-            room: { w: 4.8, h: 5.4 },
-            table: { x: 2.4, y: 3.0, w: 1.4, h: 2.4 },
+            room: {
+                w: 4.8,
+                h: 5.4
+            },
+            table: {
+                x: 2.4,
+                y: 3.0,
+                w: 1.4,
+                h: 2.4
+            },
             tableShape: 'rectangular',
-            cam: { x: 2.4, y: 0.1, rot: 90, hfov: 110, dofMax: null, audioRadius: null },
+            cam: {
+                x: 2.4,
+                y: 0.1,
+                rot: 90,
+                hfov: 110,
+                dofMax: null,
+                audioRadius: null
+            },
             selectedCamIdx: -1,
             selectedLensIdx: 0,
             multiCamEnabled: false,
@@ -251,30 +300,44 @@ class StateManager {
             extraDisplays: [],
             extraOthers: [],
             diagramImage: null,
-            genericDeviceCounts: {},
-            customPromptText: null
+            genericDeviceCounts: {}
         };
         projects.push(newProject);
         this.saveProjects(projects);
         return newProject;
     }
     static captureState() {
-        const textarea = document.getElementById('deviceListTextarea');
         return JSON.stringify({
-            room, table, tableShape, cam, selectedCamIdx, selectedLensIdx,
-            multiCamEnabled, multiCamGroup, extraCams, extraMics, extraSpeakers, extraDisplays, extraOthers,
+            room,
+            table,
+            tableShape,
+            cam,
+            selectedCamIdx,
+            selectedLensIdx,
+            multiCamEnabled,
+            multiCamGroup,
+            extraCams,
+            extraMics,
+            extraSpeakers,
+            extraDisplays,
+            extraOthers,
             diagramImage: diagramImageBase64,
-            genericDeviceCounts: genericDeviceCounts,
-            customPromptText: textarea ? textarea.value : null
+            genericDeviceCounts: genericDeviceCounts
         });
     }
     static applyState(stateStr) {
         if (!stateStr) return;
         const p = JSON.parse(stateStr);
-        room = { ...p.room };
-        table = { ...p.table };
+        room = {
+            ...p.room
+        };
+        table = {
+            ...p.table
+        };
         tableShape = p.tableShape || 'rectangular';
-        cam = { ...p.cam };
+        cam = {
+            ...p.cam
+        };
         selectedCamIdx = p.selectedCamIdx;
         selectedLensIdx = p.selectedLensIdx;
         multiCamEnabled = p.multiCamEnabled;
@@ -286,15 +349,11 @@ class StateManager {
         extraOthers = p.extraOthers ? JSON.parse(JSON.stringify(p.extraOthers)) : [];
         diagramImageBase64 = p.diagramImage || null;
         genericDeviceCounts = p.genericDeviceCounts ? JSON.parse(JSON.stringify(p.genericDeviceCounts)) : {};
-        
+
         const topologyView = document.getElementById("topologyView");
         if (topologyView && topologyView.style.display === "block") {
-            if (p.customPromptText != null) {
-                const textarea = document.getElementById('deviceListTextarea');
-                if (textarea) textarea.value = p.customPromptText;
-            } else {
-                generateDeviceListForAI();
-            }
+            generateDeviceListForAI();
+            renderGenericButtons();
             renderDiagramImage();
         }
         syncUIWithState();
@@ -323,20 +382,29 @@ class StateManager {
                 if (undoStack.length > 50) undoStack.shift();
             }
         }
-        
+
         const currentId = this.getCurrentProjectId();
         if (!currentId) return;
         const projects = this.getProjects();
         const idx = projects.findIndex(p => p.id === currentId);
         if (idx !== -1) {
-            const textarea = document.getElementById('deviceListTextarea');
             projects[idx] = {
                 ...projects[idx],
-                room, table, tableShape, cam, selectedCamIdx, selectedLensIdx,
-                multiCamEnabled, multiCamGroup, extraCams, extraMics, extraSpeakers, extraDisplays, extraOthers,
+                room,
+                table,
+                tableShape,
+                cam,
+                selectedCamIdx,
+                selectedLensIdx,
+                multiCamEnabled,
+                multiCamGroup,
+                extraCams,
+                extraMics,
+                extraSpeakers,
+                extraDisplays,
+                extraOthers,
                 diagramImage: diagramImageBase64,
                 genericDeviceCounts: genericDeviceCounts,
-                customPromptText: textarea ? textarea.value : (projects[idx].customPromptText || null),
                 updatedAt: new Date().toISOString()
             };
             this.saveProjects(projects);
@@ -347,10 +415,16 @@ class StateManager {
         const projects = this.getProjects();
         const p = projects.find(p => p.id === id);
         if (p) {
-            room = { ...p.room };
-            table = { ...p.table };
+            room = {
+                ...p.room
+            };
+            table = {
+                ...p.table
+            };
             tableShape = p.tableShape || 'rectangular';
-            cam = { ...p.cam };
+            cam = {
+                ...p.cam
+            };
             selectedCamIdx = p.selectedCamIdx;
             selectedLensIdx = p.selectedLensIdx;
             multiCamEnabled = p.multiCamEnabled;
@@ -363,14 +437,12 @@ class StateManager {
             diagramImageBase64 = p.diagramImage || null;
             genericDeviceCounts = p.genericDeviceCounts ? JSON.parse(JSON.stringify(p.genericDeviceCounts)) : {};
             this.setCurrentProjectId(id);
-            // Restore custom prompt after state is ready
-            this._pendingCustomPrompt = p.customPromptText != null ? p.customPromptText : undefined;
             undoStack = [this.captureState()];
             redoStack = [];
-            
+
             const nameDisplay = document.getElementById('projectNameDisplay');
             if (nameDisplay) nameDisplay.textContent = p.name;
-            
+
             return true;
         }
         return false;
@@ -471,7 +543,7 @@ function buildDropdown() {
 
     cameras.forEach((c, i) => {
         if (c.name.toLowerCase() === 'mb-12x pro') return;
-        
+
         const defaultLens = c.lenses[0];
         const item = document.createElement('div');
         item.className = 'cam-dd-item' + (i === selectedCamIdx ? ' active' : '');
@@ -504,10 +576,10 @@ function buildDropdown() {
                     showCustomAlert("מצב ריבוי מצלמות בוטל כיוון שהמצלמה שנבחרה אינה תומכת במצב זה.");
                 }
             }
-            
+
             updateChairsAndDraw();
             StateManager.saveCurrentState();
-            
+
             ddText.textContent = c.name;
             scroll.querySelectorAll('.cam-dd-item').forEach((el, j) => {
                 el.classList.toggle('active', j === i);
@@ -539,7 +611,7 @@ function initCustomDropdown(dropdownId, triggerId, scrollId, textId, options, on
     if (!dropdown || !trigger || !scroll || !text) return;
 
     scroll.innerHTML = '';
-    
+
     let activeIdx = 0;
     if (selectedValue) {
         const idx = options.findIndex(o => o.value === selectedValue);
@@ -590,6 +662,7 @@ function disableMultiCam() {
 }
 
 let selectedExtraCam = null;
+
 function populateAddCamOptions(group) {
     const mainCam = selectedCamIdx >= 0 ? cameras[selectedCamIdx] : null;
     const isMeetingBoardPro = mainCam && mainCam.name.toLowerCase() === 'meetingboard pro';
@@ -602,11 +675,14 @@ function populateAddCamOptions(group) {
         if (group === 'mtower') return device.is_mtower;
         return false;
     });
-    
-    selectedExtraCam = filtered[0]?.name;
-    
+
+    selectedExtraCam = filtered[0] ?.name;
+
     initCustomDropdown('addCamDropdown', 'addCamTrigger', 'addCamScroll', 'addCamText',
-        filtered.map(d => ({ label: d.name, value: d.name })),
+        filtered.map(d => ({
+            label: d.name,
+            value: d.name
+        })),
         (val) => selectedExtraCam = val
     );
 }
@@ -618,10 +694,10 @@ function renderGenericDeviceList(containerId, array, typeName, onRemove, infoFn)
     array.forEach((dev, idx) => {
         const item = document.createElement('div');
         item.className = 'added-cam-item';
-        
+
         const header = document.createElement('div');
         header.className = 'added-cam-header';
-        
+
         const titleWrap = document.createElement('div');
         titleWrap.className = 'added-cam-title';
         titleWrap.innerHTML = `
@@ -629,7 +705,7 @@ function renderGenericDeviceList(containerId, array, typeName, onRemove, infoFn)
             <span title="${dev.deviceName}">${dev.deviceName}</span>
             ${infoFn && infoFn(dev) ? `<div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${infoFn(dev)}</div>` : ''}
         `;
-        
+
         if (dev.locked) {
             const lockIcon = document.createElement('div');
             lockIcon.className = 'added-cam-lock';
@@ -696,17 +772,17 @@ function renderExtraCamsList() {
         const device = cameras.find(c => c.name === ec.deviceName);
         const item = document.createElement('div');
         item.className = 'added-cam-item';
-        
+
         const header = document.createElement('div');
         header.className = 'added-cam-header';
-        
+
         const titleWrap = document.createElement('div');
         titleWrap.className = 'added-cam-title';
         titleWrap.innerHTML = `
             <span class="added-cam-badge">מצלמה ${idx + 2}</span>
             <span title="${ec.deviceName}">${ec.deviceName}</span>
         `;
-        
+
         const removeBtn = document.createElement('button');
         removeBtn.className = 'added-cam-remove-btn';
         removeBtn.type = 'button';
@@ -721,24 +797,24 @@ function renderExtraCamsList() {
             renderExtraCamsList();
             updateChairsAndDraw();
         });
-        
+
         header.appendChild(titleWrap);
         header.appendChild(removeBtn);
         item.appendChild(header);
-        
+
         // Lens segment for extra cameras with multiple lenses
         if (device && device.lenses && device.lenses.length > 1) {
             const lensWrap = document.createElement('div');
             lensWrap.className = 'field';
             lensWrap.style.margin = '0';
-            
+
             const lensLabel = document.createElement('label');
             lensLabel.className = 'fl';
             lensLabel.style.fontSize = '10px';
             lensLabel.style.marginBottom = '3px';
             lensLabel.textContent = 'עדשה';
             lensWrap.appendChild(lensLabel);
-            
+
             const seg = document.createElement('div');
             seg.className = 'segment-control-mini';
             device.lenses.forEach((lens, li) => {
@@ -761,33 +837,33 @@ function renderExtraCamsList() {
             lensWrap.appendChild(seg);
             item.appendChild(lensWrap);
         }
-        
+
         // Properties chips
         const activeLens = device ? device.lenses[ec.selectedLensIdx || 0] : null;
         const props = document.createElement('div');
         props.className = 'added-cam-props';
-        
+
         const fChip = document.createElement('div');
         fChip.className = 'added-cam-prop-chip';
         fChip.innerText = `FOV: ${ec.hfov}°`;
         props.appendChild(fChip);
-        
+
         if (ec.dofMax) {
             const dChip = document.createElement('div');
             dChip.className = 'added-cam-prop-chip';
             dChip.innerText = `DoF: ${ec.dofMax === Infinity ? '∞' : ec.dofMax + 'm'}`;
             props.appendChild(dChip);
         }
-        
+
         if (ec.audioRadius) {
             const aChip = document.createElement('div');
             aChip.className = 'added-cam-prop-chip';
             aChip.innerText = `Mic: ${ec.audioRadius}m`;
             props.appendChild(aChip);
         }
-        
+
         item.appendChild(props);
-        
+
         // Rotation slider
         const rotField = document.createElement('div');
         rotField.className = 'field';
@@ -799,7 +875,7 @@ function renderExtraCamsList() {
                 <input type="number" class="rot-pill" id="ecPill_${ec.id}" style="font-size: 10.5px; padding: 2px 6px; min-width: 38px; border: none; background: transparent; color: var(--primary); outline: none; text-align: center;" value="${ec.rot}">
             </div>
         `;
-        
+
         const slider = rotField.querySelector('input[type="range"]');
         const pill = rotField.querySelector('.rot-pill');
         slider.addEventListener('input', (e) => {
@@ -816,7 +892,7 @@ function renderExtraCamsList() {
             updateChairsAndDraw();
             StateManager.saveCurrentState();
         });
-        
+
         item.appendChild(rotField);
         listEl.appendChild(item);
     });
@@ -829,12 +905,12 @@ function showDashboard() {
     document.getElementById('topbarNav').style.display = 'none';
     document.getElementById('undoRedoControls').style.display = 'none';
     document.getElementById('toggleSidebarBtn').style.display = 'none';
-    
+
     // Close all accordions when returning to dashboard
     document.querySelectorAll('.sidebar-accordion').forEach(acc => {
         acc.removeAttribute('open');
     });
-    
+
     renderDashboard();
 }
 
@@ -844,15 +920,15 @@ function showAppBody() {
     document.getElementById('navDashboardBtn').style.display = 'block';
     document.getElementById('topbarNav').style.display = 'flex';
     document.getElementById('undoRedoControls').style.display = 'flex';
-    
+
     // Always default to Canvas view when opening a project
     const canvasBtn = document.querySelector('.nav-btn[data-view="canvas"]');
-    if(canvasBtn) canvasBtn.click();
+    if (canvasBtn) canvasBtn.click();
     // Ensure sidebar is visible and external toggle is hidden when entering app view
     const sidebar = document.getElementById('sidebar');
     sidebar.classList.remove('collapsed');
     document.getElementById('toggleSidebarBtn').style.display = 'none';
-    
+
     syncUIWithState();
     centerRoom();
 }
@@ -864,7 +940,11 @@ function syncUIWithState() {
     document.getElementById('tableW').value = table.w;
     document.getElementById('tableH').value = table.h;
     document.getElementById('tableDist').value = Math.max(0, table.y - table.h / 2).toFixed(2);
-    const tsMap = { 'rectangular': 'מלבני (Rectangular)', 'circular': 'עגול (Circular)', 'u-shape': "צורת ח' (U-Shape)" };
+    const tsMap = {
+        'rectangular': 'מלבני (Rectangular)',
+        'circular': 'עגול (Circular)',
+        'u-shape': "צורת ח' (U-Shape)"
+    };
     if (document.getElementById('tableShapeText')) {
         document.getElementById('tableShapeText').textContent = tsMap[tableShape] || tsMap['rectangular'];
         document.querySelectorAll('#tableShapeScroll .cam-dd-item').forEach(el => {
@@ -873,7 +953,7 @@ function syncUIWithState() {
     }
     document.getElementById('camRotation').value = cam.rot;
     document.getElementById('rotVal').value = cam.rot;
-    
+
     document.getElementById('multiCamToggle').checked = multiCamEnabled;
     const controls = document.getElementById('multiCamControls');
     if (multiCamEnabled) {
@@ -932,7 +1012,7 @@ function renderDashboard() {
             StateManager.loadProject(p.id);
             showAppBody();
         });
-        
+
         const delBtn = document.createElement('button');
         delBtn.innerHTML = '&times;';
         delBtn.style.cssText = 'position: absolute; top: 10px; left: 10px; background: transparent; border: none; font-size: 18px; color: var(--text-3); cursor: pointer;';
@@ -962,7 +1042,7 @@ function init() {
         document.querySelector('.sun-icon').style.display = 'none';
         document.querySelector('.moon-icon').style.display = 'block';
     }
-    
+
     document.getElementById('themeToggleBtn').addEventListener('click', () => {
         const isDark = document.body.dataset.theme === 'dark';
         if (isDark) {
@@ -1011,6 +1091,7 @@ function init() {
             }
         }, 300);
     }
+
     function expandSidebar() {
         toggleSidebarBtn.classList.remove('visible'); // slide out
         sidebarEl.classList.remove('collapsed'); // start opening sidebar immediately
@@ -1073,7 +1154,7 @@ function init() {
             StateManager.saveCurrentState();
         });
     });
-    
+
     document.querySelectorAll('#micDisplaySegment .segment-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('#micDisplaySegment .segment-btn').forEach(b => b.classList.remove('active'));
@@ -1127,10 +1208,18 @@ function init() {
         document.getElementById(id).addEventListener('input', readInputs);
     });
 
-    initCustomDropdown('tableShapeDropdown', 'tableShapeTrigger', 'tableShapeScroll', 'tableShapeText', [
-        { label: 'מלבני (Rectangular)', value: 'rectangular' },
-        { label: 'עגול (Circular)', value: 'circular' },
-        { label: 'צורת ח\' (U-Shape)', value: 'u-shape' }
+    initCustomDropdown('tableShapeDropdown', 'tableShapeTrigger', 'tableShapeScroll', 'tableShapeText', [{
+            label: 'מלבני (Rectangular)',
+            value: 'rectangular'
+        },
+        {
+            label: 'עגול (Circular)',
+            value: 'circular'
+        },
+        {
+            label: 'צורת ח\' (U-Shape)',
+            value: 'u-shape'
+        }
     ], (val) => {
         tableShape = val;
         updateChairsAndDraw();
@@ -1151,7 +1240,7 @@ function init() {
                 multiCamGroup = 'avhub';
                 controls.style.display = 'block';
                 populateAddCamOptions('avhub');
-                
+
                 // Add AVHub to extraOthers if not already present
                 if (!extraOthers.some(d => d.id === 'auto-avhub')) {
                     extraOthers.push({
@@ -1162,7 +1251,7 @@ function init() {
                     });
                     renderExtraDevicesList();
                 }
-                
+
                 updateDropdownDisabledState();
                 renderExtraCamsList();
             } else if (activeCam && activeCam.supports_mtower) {
@@ -1221,27 +1310,39 @@ function init() {
         }
     });
 
-    let selectedDisplay = window.availableDisplays[0]?.name;
+    let selectedDisplay = window.availableDisplays[0] ?.name;
     initCustomDropdown('displayDropdown', 'displayTrigger', 'displayScroll', 'displayText',
-        window.availableDisplays.map(d => ({ label: d.name, value: d.name })),
+        window.availableDisplays.map(d => ({
+            label: d.name,
+            value: d.name
+        })),
         (val) => selectedDisplay = val
     );
 
-    let selectedMic = window.availableMics[0]?.name;
+    let selectedMic = window.availableMics[0] ?.name;
     initCustomDropdown('micDropdown', 'micTrigger', 'micScroll', 'micText',
-        window.availableMics.map(d => ({ label: d.name, value: d.name })),
+        window.availableMics.map(d => ({
+            label: d.name,
+            value: d.name
+        })),
         (val) => selectedMic = val
     );
 
-    let selectedSpeaker = window.availableSpeakers[0]?.name;
+    let selectedSpeaker = window.availableSpeakers[0] ?.name;
     initCustomDropdown('speakerDropdown', 'speakerTrigger', 'speakerScroll', 'speakerText',
-        window.availableSpeakers.map(d => ({ label: d.name, value: d.name })),
+        window.availableSpeakers.map(d => ({
+            label: d.name,
+            value: d.name
+        })),
         (val) => selectedSpeaker = val
     );
 
-    let selectedOther = window.availableOthers[0]?.name;
+    let selectedOther = window.availableOthers[0] ?.name;
     initCustomDropdown('otherDropdown', 'otherTrigger', 'otherScroll', 'otherText',
-        window.availableOthers.map(d => ({ label: d.name, value: d.name })),
+        window.availableOthers.map(d => ({
+            label: d.name,
+            value: d.name
+        })),
         (val) => selectedOther = val
     );
 
@@ -1364,24 +1465,29 @@ function init() {
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerup', onPointerUp);
     canvas.addEventListener('pointerleave', onPointerUp);
-    
+
     document.addEventListener('keydown', (e) => {
         // Close any open modal on Escape
         if (e.key === 'Escape') {
             if (document.getElementById('confirmModal').classList.contains('open')) {
-                closeCustomConfirm(); return;
+                closeCustomConfirm();
+                return;
             }
             if (document.getElementById('alertModal').classList.contains('open')) {
-                closeCustomAlert(); return;
+                closeCustomAlert();
+                return;
             }
             if (document.getElementById('newProjectModal').classList.contains('open')) {
-                document.getElementById('newProjectModal').classList.remove('open'); return;
+                document.getElementById('newProjectModal').classList.remove('open');
+                return;
             }
             if (document.getElementById('renameProjectModal').classList.contains('open')) {
-                document.getElementById('renameProjectModal').classList.remove('open'); return;
+                document.getElementById('renameProjectModal').classList.remove('open');
+                return;
             }
             if (document.getElementById('promptModal').classList.contains('open')) {
-                document.getElementById('promptModal').classList.remove('open'); return;
+                document.getElementById('promptModal').classList.remove('open');
+                return;
             }
         }
 
@@ -1433,18 +1539,20 @@ function init() {
             }
         }
     });
-    
+
     // Wheel Zoom Event
-    canvas.addEventListener('wheel', onWheel, { passive: false });
+    canvas.addEventListener('wheel', onWheel, {
+        passive: false
+    });
 
     // Controls
     document.getElementById('btnZoomIn').addEventListener('click', () => zoomBy(1.2));
     document.getElementById('btnZoomOut').addEventListener('click', () => zoomBy(1 / 1.2));
     document.getElementById('btnResetView').addEventListener('click', centerRoom);
-    
+
     const btnUndo = document.getElementById('btnUndo');
     if (btnUndo) btnUndo.addEventListener('click', () => StateManager.undo());
-    
+
     const btnRedo = document.getElementById('btnRedo');
     if (btnRedo) btnRedo.addEventListener('click', () => StateManager.redo());
 
@@ -1481,11 +1589,11 @@ function resizeCanvas() {
 
 function centerRoom() {
     if (document.getElementById('topologyView') && document.getElementById('topologyView').style.display === 'block') {
-        if(typeof topScale !== 'undefined') {
+        if (typeof topScale !== 'undefined') {
             topScale = 1;
             topOffsetX = 0;
             topOffsetY = 0;
-            if(typeof updateTopologyTransform === 'function') updateTopologyTransform();
+            if (typeof updateTopologyTransform === 'function') updateTopologyTransform();
         }
         return;
     }
@@ -1499,27 +1607,27 @@ function centerRoom() {
 
 function zoomBy(factor) {
     if (document.getElementById('topologyView') && document.getElementById('topologyView').style.display === 'block') {
-        if(typeof topScale !== 'undefined') {
+        if (typeof topScale !== 'undefined') {
             topScale *= factor;
             topScale = Math.max(0.2, Math.min(topScale, 5));
-            if(typeof updateTopologyTransform === 'function') updateTopologyTransform();
+            if (typeof updateTopologyTransform === 'function') updateTopologyTransform();
         }
         return;
     }
 
     let newScale = scale * factor;
     newScale = Math.max(0.2, Math.min(newScale, 5));
-    
+
     const cx = (canvas.width + RULER) / 2;
     const cy = (canvas.height + RULER) / 2;
-    
+
     const wx = (cx - RULER - offsetX) / (PPM * scale);
     const wy = (cy - RULER - offsetY) / (PPM * scale);
 
     offsetX = cx - RULER - wx * PPM * newScale;
     offsetY = cy - RULER - wy * PPM * newScale;
     scale = newScale;
-    
+
     updateZoomDisplay();
     draw();
 }
@@ -1533,7 +1641,7 @@ function readInputs(e) {
     room.h = parseFloat(document.getElementById('roomH').value) || 5.4;
     table.w = parseFloat(document.getElementById('tableW').value) || 1.4;
     table.h = parseFloat(document.getElementById('tableH').value) || 2.4;
-    
+
     if (!e || e.target.id === 'tableDist' || e.target.id === 'tableH') {
         let tDist = parseFloat(document.getElementById('tableDist').value) || 0;
         table.y = tDist + table.h / 2;
@@ -1551,11 +1659,11 @@ function generateChairs() {
     const chairSpacing = 0.65;
     const manualSeatsInput = document.getElementById('tableSeats');
     const manualSeats = manualSeatsInput ? parseInt(manualSeatsInput.value) : NaN;
-    
+
     if (tableShape === 'rectangular') {
         let sideChairsCount;
         let hasBottomChair = true;
-        
+
         if (!isNaN(manualSeats) && manualSeats > 0) {
             if (manualSeats % 2 === 0) {
                 sideChairsCount = manualSeats / 2;
@@ -1571,22 +1679,33 @@ function generateChairs() {
 
         const currentSpacing = sideChairsCount > 0 ? table.h / sideChairsCount : chairSpacing;
         const startY = (table.y - table.h / 2) + currentSpacing / 2;
-        
+
         for (let i = 0; i < sideChairsCount; i++) {
             let cy = startY + i * currentSpacing;
-            chairs.push({ x: table.x - table.w / 2 - 0.25, y: cy, angle: 0 });
-            chairs.push({ x: table.x + table.w / 2 + 0.25, y: cy, angle: 180 });
+            chairs.push({
+                x: table.x - table.w / 2 - 0.25,
+                y: cy,
+                angle: 0
+            });
+            chairs.push({
+                x: table.x + table.w / 2 + 0.25,
+                y: cy,
+                angle: 180
+            });
         }
-        
+
         if (hasBottomChair && manualSeats !== 0) {
-            chairs.push({ x: table.x, y: table.y + table.h / 2 + 0.25, angle: 270 });
+            chairs.push({
+                x: table.x,
+                y: table.y + table.h / 2 + 0.25,
+                angle: 270
+            });
         }
-    } 
-    else if (tableShape === 'circular') {
+    } else if (tableShape === 'circular') {
         const a = table.w / 2;
         const b = table.h / 2;
         let count;
-        
+
         if (!isNaN(manualSeats) && manualSeats > 0) {
             count = manualSeats;
         } else {
@@ -1602,12 +1721,15 @@ function generateChairs() {
             const cy = table.y + (b + 0.25) * Math.sin(angleRad);
             // Normal angle for ellipse
             const normalAngleRad = Math.atan2(a * Math.sin(angleRad), b * Math.cos(angleRad));
-            chairs.push({ x: cx, y: cy, angle: (normalAngleRad * 180 / Math.PI + 180) % 360 });
+            chairs.push({
+                x: cx,
+                y: cy,
+                angle: (normalAngleRad * 180 / Math.PI + 180) % 360
+            });
         }
-    } 
-    else if (tableShape === 'u-shape') {
+    } else if (tableShape === 'u-shape') {
         let sideChairsCount, bottomChairsCount;
-        
+
         if (!isNaN(manualSeats) && manualSeats > 0) {
             const totalLen = 2 * table.h + table.w;
             sideChairsCount = Math.round((table.h / totalLen) * manualSeats);
@@ -1626,15 +1748,27 @@ function generateChairs() {
 
         const startY = (table.y - table.h / 2) + sideSpacing / 2;
         for (let i = 0; i < sideChairsCount; i++) {
-            chairs.push({ x: table.x - table.w / 2 - 0.25, y: startY + i * sideSpacing, angle: 0 });
-            chairs.push({ x: table.x + table.w / 2 + 0.25, y: startY + i * sideSpacing, angle: 180 });
+            chairs.push({
+                x: table.x - table.w / 2 - 0.25,
+                y: startY + i * sideSpacing,
+                angle: 0
+            });
+            chairs.push({
+                x: table.x + table.w / 2 + 0.25,
+                y: startY + i * sideSpacing,
+                angle: 180
+            });
         }
-        
+
         const startX = (table.x - table.w / 2) + bottomSpacing / 2;
         for (let i = 0; i < bottomChairsCount; i++) {
-            chairs.push({ x: startX + i * bottomSpacing, y: table.y + table.h / 2 + 0.25, angle: 270 });
+            chairs.push({
+                x: startX + i * bottomSpacing,
+                y: table.y + table.h / 2 + 0.25,
+                angle: 270
+            });
         }
-    } 
+    }
 }
 
 function checkSingleCamCoverage(c, px, py) {
@@ -1696,7 +1830,10 @@ function checkMicCoverage(px, py) {
         }
     });
 
-    return { hasMics, covered };
+    return {
+        hasMics,
+        covered
+    };
 }
 
 function updateChairsAndDraw() {
@@ -1719,7 +1856,7 @@ function updateChairsAndDraw() {
     chairs.forEach(c => {
         c.inside = checkFovCoverage(c.x, c.y);
         if (c.inside) insideCamCount++;
-        
+
         let micCheck = checkMicCoverage(c.x, c.y);
         if (micCheck.hasMics) hasMics = true;
         if (micCheck.covered) insideMicCount++;
@@ -1730,7 +1867,7 @@ function updateChairsAndDraw() {
 
     const circ = 169.6;
     let hasCams = selectedCamIdx >= 0 || (multiCamEnabled && extraCams.length > 0);
-    
+
     // Update Camera Ring
     const camRing = document.getElementById('camCoverageRing');
     const camLabel = document.getElementById('camRingLabel');
@@ -1802,7 +1939,10 @@ function onPointerDown(e) {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-    lastMouse = { x: mx, y: my };
+    lastMouse = {
+        x: mx,
+        y: my
+    };
 
     if (mx < RULER || my < RULER) return;
 
@@ -1813,11 +1953,14 @@ function onPointerDown(e) {
         for (let i = 0; i < extraCams.length; i++) {
             const ec = extraCams[i];
             if (ec.deviceName && ec.deviceName.toLowerCase() === 'mb-12x pro') continue;
-            
+
             const ecPx = RULER + offsetX + ec.x * PPM * scale;
             const ecPy = RULER + offsetY + ec.y * PPM * scale;
             if (Math.hypot(mx - ecPx, my - ecPy) < 25) {
-                dragTarget = { type: 'extraCam', id: ec.id };
+                dragTarget = {
+                    type: 'extraCam',
+                    id: ec.id
+                };
                 selectedObject = dragTarget;
                 canvas.setPointerCapture(e.pointerId);
                 draw();
@@ -1826,17 +1969,25 @@ function onPointerDown(e) {
         }
     }
 
-    const extraTypes = [
-        { arr: extraMics, type: 'extraMic' },
-        { arr: extraSpeakers, type: 'extraSpeaker' },
-        { arr: extraDisplays, type: 'extraDisplay' }
+    const extraTypes = [{
+            arr: extraMics,
+            type: 'extraMic'
+        },
+        {
+            arr: extraSpeakers,
+            type: 'extraSpeaker'
+        },
+        {
+            arr: extraDisplays,
+            type: 'extraDisplay'
+        }
     ];
     for (const t of extraTypes) {
         for (let i = 0; i < t.arr.length; i++) {
             const dev = t.arr[i];
             const px = RULER + offsetX + dev.x * PPM * scale;
             const py = RULER + offsetY + dev.y * PPM * scale;
-            
+
             let isHit = false;
             if (t.type === 'extraDisplay') {
                 const angle = -(dev.rot || 0) * Math.PI / 180;
@@ -1847,7 +1998,7 @@ function onPointerDown(e) {
                 const w = (dev.width || 1) * PPM * scale;
                 const h = 0.05 * PPM * scale;
                 // Add 15px padding for easier grabbing
-                if (Math.abs(lx) <= w/2 + 15 && Math.abs(ly) <= h/2 + 15) {
+                if (Math.abs(lx) <= w / 2 + 15 && Math.abs(ly) <= h / 2 + 15) {
                     isHit = true;
                 }
             } else {
@@ -1857,7 +2008,10 @@ function onPointerDown(e) {
             }
 
             if (isHit) {
-                dragTarget = { type: t.type, id: dev.id };
+                dragTarget = {
+                    type: t.type,
+                    id: dev.id
+                };
                 selectedObject = dragTarget;
                 canvas.setPointerCapture(e.pointerId);
                 draw();
@@ -1874,15 +2028,18 @@ function onPointerDown(e) {
         const hx = camPx + Math.cos(handleAngle) * 48;
         const hy = camPy + Math.sin(handleAngle) * 48;
         if (Math.hypot(mx - hx, my - hy) < 15) {
-            dragTarget = { type: 'rotate-cam', target: 'cam' };
+            dragTarget = {
+                type: 'rotate-cam',
+                target: 'cam'
+            };
             canvas.setPointerCapture(e.pointerId);
             return;
         }
     } else if (selectedObject && typeof selectedObject === 'object') {
         let dev = null;
         if (selectedObject.type === 'extraCam') dev = extraCams.find(c => c.id === selectedObject.id);
-        
-        
+
+
         if (dev) {
             const px = RULER + offsetX + dev.x * PPM * scale;
             const py = RULER + offsetY + dev.y * PPM * scale;
@@ -1890,7 +2047,10 @@ function onPointerDown(e) {
             const hx = px + Math.cos(handleAngle) * 48;
             const hy = py + Math.sin(handleAngle) * 48;
             if (Math.hypot(mx - hx, my - hy) < 15) {
-                dragTarget = { type: 'rotate-cam', target: selectedObject };
+                dragTarget = {
+                    type: 'rotate-cam',
+                    target: selectedObject
+                };
                 canvas.setPointerCapture(e.pointerId);
                 return;
             }
@@ -1909,18 +2069,36 @@ function onPointerDown(e) {
     const tY = RULER + offsetY + table.y * PPM * scale;
     const tW = table.w * PPM * scale;
     const tH = table.h * PPM * scale;
-    
+
     if (selectedObject === 'table') {
         const hSize = 8;
-        const corners = [
-            { id: 'tl', x: tX - tW/2, y: tY - tH/2 },
-            { id: 'tr', x: tX + tW/2, y: tY - tH/2 },
-            { id: 'bl', x: tX - tW/2, y: tY + tH/2 },
-            { id: 'br', x: tX + tW/2, y: tY + tH/2 }
+        const corners = [{
+                id: 'tl',
+                x: tX - tW / 2,
+                y: tY - tH / 2
+            },
+            {
+                id: 'tr',
+                x: tX + tW / 2,
+                y: tY - tH / 2
+            },
+            {
+                id: 'bl',
+                x: tX - tW / 2,
+                y: tY + tH / 2
+            },
+            {
+                id: 'br',
+                x: tX + tW / 2,
+                y: tY + tH / 2
+            }
         ];
         for (let c of corners) {
             if (Math.hypot(mx - c.x, my - c.y) < hSize) {
-                dragTarget = { type: 'resize', corner: c.id };
+                dragTarget = {
+                    type: 'resize',
+                    corner: c.id
+                };
                 canvas.setPointerCapture(e.pointerId);
                 return;
             }
@@ -1949,7 +2127,10 @@ function onPointerMove(e) {
     const my = e.clientY - rect.top;
     const dx = mx - lastMouse.x;
     const dy = my - lastMouse.y;
-    lastMouse = { x: mx, y: my };
+    lastMouse = {
+        x: mx,
+        y: my
+    };
 
     const camPx = RULER + offsetX + cam.x * PPM * scale;
     const camPy = RULER + offsetY + cam.y * PPM * scale;
@@ -1963,7 +2144,7 @@ function onPointerMove(e) {
         for (let i = 0; i < extraCams.length; i++) {
             const ec = extraCams[i];
             if (ec.deviceName && ec.deviceName.toLowerCase() === 'mb-12x pro') continue;
-            
+
             const ecPx = RULER + offsetX + ec.x * PPM * scale;
             const ecPy = RULER + offsetY + ec.y * PPM * scale;
             if (Math.hypot(mx - ecPx, my - ecPy) < 25) {
@@ -1972,17 +2153,25 @@ function onPointerMove(e) {
             }
         }
     }
-    const extraTypes = [
-        { arr: extraMics, type: 'extraMic' },
-        { arr: extraSpeakers, type: 'extraSpeaker' },
-        { arr: extraDisplays, type: 'extraDisplay' }
+    const extraTypes = [{
+            arr: extraMics,
+            type: 'extraMic'
+        },
+        {
+            arr: extraSpeakers,
+            type: 'extraSpeaker'
+        },
+        {
+            arr: extraDisplays,
+            type: 'extraDisplay'
+        }
     ];
     for (const t of extraTypes) {
         for (let i = 0; i < t.arr.length; i++) {
             const dev = t.arr[i];
             const px = RULER + offsetX + dev.x * PPM * scale;
             const py = RULER + offsetY + dev.y * PPM * scale;
-            
+
             let isHit = false;
             if (t.type === 'extraDisplay') {
                 const angle = -(dev.rot || 0) * Math.PI / 180;
@@ -1992,7 +2181,7 @@ function onPointerMove(e) {
                 const ly = distx * Math.sin(angle) + disty * Math.cos(angle);
                 const w = (dev.width || 1) * PPM * scale;
                 const h = 0.05 * PPM * scale;
-                if (Math.abs(lx) <= w/2 + 15 && Math.abs(ly) <= h/2 + 15) {
+                if (Math.abs(lx) <= w / 2 + 15 && Math.abs(ly) <= h / 2 + 15) {
                     isHit = true;
                 }
             } else {
@@ -2010,7 +2199,7 @@ function onPointerMove(e) {
     if (dragTarget || isPanning) {
         canvas.style.cursor = 'grabbing';
     } else if (Math.hypot(mx - camPx, my - camPy) < 25 || hoverTarget ||
-               (mx > tX - tW / 2 && mx < tX + tW / 2 && my > tY - tH / 2 && my < tY + tH / 2)) {
+        (mx > tX - tW / 2 && mx < tX + tW / 2 && my > tY - tH / 2 && my < tY + tH / 2)) {
         canvas.style.cursor = 'grab';
     } else {
         canvas.style.cursor = 'default';
@@ -2048,7 +2237,7 @@ function onPointerMove(e) {
             const angleRad = Math.atan2(my - cy, mx - cx);
             let angleDeg = Math.round(angleRad * 180 / Math.PI + 45);
             angleDeg = (angleDeg % 360 + 360) % 360;
-            
+
             const snapThreshold = 12;
             for (let snap of [0, 90, 180, 270, 360]) {
                 if (Math.abs(angleDeg - snap) <= snapThreshold || Math.abs(angleDeg - snap) >= 360 - snapThreshold) {
@@ -2056,7 +2245,7 @@ function onPointerMove(e) {
                     break;
                 }
             }
-            
+
             targetDev.rot = angleDeg;
 
             if (dragTarget.target === 'cam') {
@@ -2078,8 +2267,14 @@ function onPointerMove(e) {
     if (dragTarget === 'cam') {
         let nx = Math.max(0, Math.min(room.w, wx));
         let ny = Math.max(0, Math.min(room.h, wy));
-        if (Math.abs(nx - room.w / 2) < 0.15) { nx = room.w / 2; isSnappedX = true; }
-        if (Math.abs(ny - room.h / 2) < 0.15) { ny = room.h / 2; isSnappedY = true; }
+        if (Math.abs(nx - room.w / 2) < 0.15) {
+            nx = room.w / 2;
+            isSnappedX = true;
+        }
+        if (Math.abs(ny - room.h / 2) < 0.15) {
+            ny = room.h / 2;
+            isSnappedY = true;
+        }
         cam.x = nx;
         cam.y = ny;
     } else if (typeof dragTarget === 'object' && dragTarget.type === 'extraCam') {
@@ -2087,8 +2282,14 @@ function onPointerMove(e) {
         if (ec) {
             let nx = Math.max(0, Math.min(room.w, wx));
             let ny = Math.max(0, Math.min(room.h, wy));
-            if (Math.abs(nx - room.w / 2) < 0.15) { nx = room.w / 2; isSnappedX = true; }
-            if (Math.abs(ny - room.h / 2) < 0.15) { ny = room.h / 2; isSnappedY = true; }
+            if (Math.abs(nx - room.w / 2) < 0.15) {
+                nx = room.w / 2;
+                isSnappedX = true;
+            }
+            if (Math.abs(ny - room.h / 2) < 0.15) {
+                ny = room.h / 2;
+                isSnappedY = true;
+            }
             ec.x = nx;
             ec.y = ny;
         }
@@ -2097,8 +2298,14 @@ function onPointerMove(e) {
         if (em) {
             let nx = Math.max(0, Math.min(room.w, wx));
             let ny = Math.max(0, Math.min(room.h, wy));
-            if (Math.abs(nx - room.w / 2) < 0.15) { nx = room.w / 2; isSnappedX = true; }
-            if (Math.abs(ny - room.h / 2) < 0.15) { ny = room.h / 2; isSnappedY = true; }
+            if (Math.abs(nx - room.w / 2) < 0.15) {
+                nx = room.w / 2;
+                isSnappedX = true;
+            }
+            if (Math.abs(ny - room.h / 2) < 0.15) {
+                ny = room.h / 2;
+                isSnappedY = true;
+            }
             em.x = nx;
             em.y = ny;
         }
@@ -2107,8 +2314,14 @@ function onPointerMove(e) {
         if (es) {
             let nx = Math.max(0, Math.min(room.w, wx));
             let ny = Math.max(0, Math.min(room.h, wy));
-            if (Math.abs(nx - room.w / 2) < 0.15) { nx = room.w / 2; isSnappedX = true; }
-            if (Math.abs(ny - room.h / 2) < 0.15) { ny = room.h / 2; isSnappedY = true; }
+            if (Math.abs(nx - room.w / 2) < 0.15) {
+                nx = room.w / 2;
+                isSnappedX = true;
+            }
+            if (Math.abs(ny - room.h / 2) < 0.15) {
+                ny = room.h / 2;
+                isSnappedY = true;
+            }
             es.x = nx;
             es.y = ny;
         }
@@ -2117,22 +2330,34 @@ function onPointerMove(e) {
         if (ed) {
             let nx = Math.max(0, Math.min(room.w, wx));
             let ny = Math.max(0, Math.min(room.h, wy));
-            if (Math.abs(nx - room.w / 2) < 0.15) { nx = room.w / 2; isSnappedX = true; }
-            
-            if (wy < 0.5) ny = 0.1; 
+            if (Math.abs(nx - room.w / 2) < 0.15) {
+                nx = room.w / 2;
+                isSnappedX = true;
+            }
+
+            if (wy < 0.5) ny = 0.1;
             else if (wy > room.h - 0.5) ny = room.h - 0.1;
-            else if (Math.abs(ny - room.h / 2) < 0.15) { ny = room.h / 2; isSnappedY = true; }
-            
+            else if (Math.abs(ny - room.h / 2) < 0.15) {
+                ny = room.h / 2;
+                isSnappedY = true;
+            }
+
             ed.x = nx;
             ed.y = ny;
         }
     } else if (dragTarget === 'table') {
         let nx = Math.max(table.w / 2, Math.min(room.w - table.w / 2, wx - dragOffset.x));
         let ny = Math.max(table.h / 2, Math.min(room.h - table.h / 2, wy - dragOffset.y));
-        
-        if (Math.abs(nx - room.w / 2) < 0.15) { nx = room.w / 2; isSnappedX = true; }
-        if (Math.abs(ny - room.h / 2) < 0.15) { ny = room.h / 2; isSnappedY = true; }
-        
+
+        if (Math.abs(nx - room.w / 2) < 0.15) {
+            nx = room.w / 2;
+            isSnappedX = true;
+        }
+        if (Math.abs(ny - room.h / 2) < 0.15) {
+            ny = room.h / 2;
+            isSnappedY = true;
+        }
+
         table.x = nx;
         table.y = ny;
         document.getElementById('tableDist').value = Math.max(0, table.y - table.h / 2).toFixed(2);
@@ -2145,30 +2370,30 @@ function onPointerMove(e) {
         let newY = table.y;
 
         if (dragTarget.corner.includes('l')) {
-            const rightEdge = table.x + table.w/2;
+            const rightEdge = table.x + table.w / 2;
             newW = Math.max(minW, rightEdge - wx);
-            newX = rightEdge - newW/2;
+            newX = rightEdge - newW / 2;
         } else if (dragTarget.corner.includes('r')) {
-            const leftEdge = table.x - table.w/2;
+            const leftEdge = table.x - table.w / 2;
             newW = Math.max(minW, wx - leftEdge);
-            newX = leftEdge + newW/2;
+            newX = leftEdge + newW / 2;
         }
-        
+
         if (dragTarget.corner.includes('t')) {
-            const bottomEdge = table.y + table.h/2;
+            const bottomEdge = table.y + table.h / 2;
             newH = Math.max(minH, bottomEdge - wy);
-            newY = bottomEdge - newH/2;
+            newY = bottomEdge - newH / 2;
         } else if (dragTarget.corner.includes('b')) {
-            const topEdge = table.y - table.h/2;
+            const topEdge = table.y - table.h / 2;
             newH = Math.max(minH, wy - topEdge);
-            newY = topEdge + newH/2;
+            newY = topEdge + newH / 2;
         }
 
         table.w = newW;
         table.h = newH;
         table.x = newX;
         table.y = newY;
-        
+
         document.getElementById('tableW').value = table.w.toFixed(1);
         document.getElementById('tableH').value = table.h.toFixed(1);
         document.getElementById('tableDist').value = Math.max(0, table.y - table.h / 2).toFixed(2);
@@ -2227,7 +2452,7 @@ function draw() {
 
     drawFOV();
     drawTableAndChairs();
-    
+
     ctx.restore();
 
     // Draw dimension lines BEFORE devices so devices hide the lines beneath them
@@ -2250,8 +2475,8 @@ function draw() {
         ctx.lineWidth = 1.5 / scale;
         ctx.setLineDash([8 / scale, 4 / scale]);
         ctx.beginPath();
-        ctx.moveTo(room.w/2 * PPM, 0);
-        ctx.lineTo(room.w/2 * PPM, room.h * PPM);
+        ctx.moveTo(room.w / 2 * PPM, 0);
+        ctx.lineTo(room.w / 2 * PPM, room.h * PPM);
         ctx.stroke();
         ctx.setLineDash([]);
     }
@@ -2260,8 +2485,8 @@ function draw() {
         ctx.lineWidth = 1.5 / scale;
         ctx.setLineDash([8 / scale, 4 / scale]);
         ctx.beginPath();
-        ctx.moveTo(0, room.h/2 * PPM);
-        ctx.lineTo(room.w * PPM, room.h/2 * PPM);
+        ctx.moveTo(0, room.h / 2 * PPM);
+        ctx.lineTo(room.w * PPM, room.h / 2 * PPM);
         ctx.stroke();
         ctx.setLineDash([]);
     }
@@ -2282,29 +2507,33 @@ function drawGrid(minX, maxX, minY, maxY) {
     ctx.lineWidth = 1;
     ctx.beginPath();
     let startGridX = Math.floor(minX / 0.5) * 0.5;
-    for(let wx = startGridX; wx <= maxX; wx += 0.5) {
+    for (let wx = startGridX; wx <= maxX; wx += 0.5) {
         let sx = RULER + offsetX + wx * PPM * scale;
-        ctx.moveTo(sx, RULER); ctx.lineTo(sx, canvas.height);
+        ctx.moveTo(sx, RULER);
+        ctx.lineTo(sx, canvas.height);
     }
     let startGridY = Math.floor(minY / 0.5) * 0.5;
-    for(let wy = startGridY; wy <= maxY; wy += 0.5) {
+    for (let wy = startGridY; wy <= maxY; wy += 0.5) {
         let sy = RULER + offsetY + wy * PPM * scale;
-        ctx.moveTo(RULER, sy); ctx.lineTo(canvas.width, sy);
+        ctx.moveTo(RULER, sy);
+        ctx.lineTo(canvas.width, sy);
     }
     ctx.stroke();
-    
+
     // 1.0m lines
     ctx.strokeStyle = color10;
     ctx.beginPath();
     let startGridX2 = Math.floor(minX / 1.0) * 1.0;
-    for(let wx = startGridX2; wx <= maxX; wx += 1.0) {
+    for (let wx = startGridX2; wx <= maxX; wx += 1.0) {
         let sx = RULER + offsetX + wx * PPM * scale;
-        ctx.moveTo(sx, RULER); ctx.lineTo(sx, canvas.height);
+        ctx.moveTo(sx, RULER);
+        ctx.lineTo(sx, canvas.height);
     }
     let startGridY2 = Math.floor(minY / 1.0) * 1.0;
-    for(let wy = startGridY2; wy <= maxY; wy += 1.0) {
+    for (let wy = startGridY2; wy <= maxY; wy += 1.0) {
         let sy = RULER + offsetY + wy * PPM * scale;
-        ctx.moveTo(RULER, sy); ctx.lineTo(canvas.width, sy);
+        ctx.moveTo(RULER, sy);
+        ctx.lineTo(canvas.width, sy);
     }
     ctx.stroke();
 
@@ -2314,14 +2543,14 @@ function drawGrid(minX, maxX, minY, maxY) {
 function drawRoomDimensions() {
     const lineColor = '#8A8A8E';
     const textColor = '#8A8A8E';
-    
+
     ctx.save();
     ctx.strokeStyle = lineColor;
     ctx.fillStyle = textColor;
     ctx.lineWidth = 1.5;
     ctx.font = '12px Heebo, sans-serif';
     ctx.textBaseline = 'middle';
-    
+
     const startX = offsetX;
     const startY = offsetY;
     const endX = offsetX + room.w * PPM * scale;
@@ -2334,14 +2563,14 @@ function drawRoomDimensions() {
     ctx.moveTo(startX, startY);
     ctx.lineTo(endX + 15, startY);
     ctx.stroke();
-    
+
     // X Arrowhead
     ctx.beginPath();
     ctx.moveTo(endX + 15, startY);
     ctx.lineTo(endX + 8, startY - 4);
     ctx.lineTo(endX + 8, startY + 4);
     ctx.fill();
-    
+
     // X Text (e.g. X(8.0m))
     ctx.textAlign = 'left';
     ctx.fillText(`X(${(room.w).toFixed(1)}m)`, endX + 18, startY);
@@ -2351,18 +2580,18 @@ function drawRoomDimensions() {
     ctx.moveTo(startX, startY);
     ctx.lineTo(startX, endY + 15);
     ctx.stroke();
-    
+
     // Y Arrowhead
     ctx.beginPath();
     ctx.moveTo(startX, endY + 15);
     ctx.lineTo(startX - 4, endY + 8);
     ctx.lineTo(startX + 4, endY + 8);
     ctx.fill();
-    
+
     // Y Text (e.g. Y(6.0m))
     ctx.textAlign = 'center';
     ctx.fillText(`Y(${(room.h).toFixed(1)}m)`, startX, endY + 28);
-    
+
     ctx.restore();
 }
 
@@ -2378,13 +2607,13 @@ function drawSingleCamFOV(c) {
     if (c.audioRadius && micDisplayMode !== 'hidden') {
         const ar = c.audioRadius * PPM;
         ctx.beginPath();
-        
-        const arcStart = angleRad - Math.PI/2;
-        const arcEnd = angleRad + Math.PI/2;
-        
+
+        const arcStart = angleRad - Math.PI / 2;
+        const arcEnd = angleRad + Math.PI / 2;
+
         ctx.arc(cx, cy, ar, arcStart, arcEnd);
         ctx.closePath();
-        
+
         if (micDisplayMode === 'fill') {
             const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, ar);
             grad.addColorStop(0, 'rgba(245, 158, 11, 0.15)');
@@ -2392,7 +2621,7 @@ function drawSingleCamFOV(c) {
             ctx.fillStyle = grad;
             ctx.fill();
         }
-        
+
         ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
         ctx.lineWidth = 1.5 / scale;
         ctx.setLineDash([8 / scale, 6 / scale]);
@@ -2402,7 +2631,7 @@ function drawSingleCamFOV(c) {
 
     if (fovDisplayMode !== 'hidden') {
         if (c.dofMax && fovDisplayMode === 'fill') {
-            const dofMaxPx = c.dofMax === Infinity ? 30 * PPM : c.dofMax * PPM; 
+            const dofMaxPx = c.dofMax === Infinity ? 30 * PPM : c.dofMax * PPM;
             const visualMax = Math.min(dofMaxPx, 30 * PPM);
 
             const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, visualMax);
@@ -2422,8 +2651,10 @@ function drawSingleCamFOV(c) {
         ctx.lineWidth = 1.8 / scale;
         ctx.setLineDash([6 / scale, 5 / scale]);
         ctx.beginPath();
-        ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(startAngle) * rDefault, cy + Math.sin(startAngle) * rDefault);
-        ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(endAngle) * rDefault, cy + Math.sin(endAngle) * rDefault);
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(startAngle) * rDefault, cy + Math.sin(startAngle) * rDefault);
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(endAngle) * rDefault, cy + Math.sin(endAngle) * rDefault);
         ctx.stroke();
         ctx.setLineDash([]);
     }
@@ -2460,12 +2691,12 @@ function drawTableAndChairs() {
         ctx.fill();
         ctx.stroke();
 
-        const sColor  = c.inside ? 'rgba(16,185,129,0.85)' : 'rgba(239,68,68,0.5)';
-        const sFill   = c.inside ? 'rgba(16,185,129,0.13)' : 'rgba(239,68,68,0.06)';
+        const sColor = c.inside ? 'rgba(16,185,129,0.85)' : 'rgba(239,68,68,0.5)';
+        const sFill = c.inside ? 'rgba(16,185,129,0.13)' : 'rgba(239,68,68,0.06)';
 
-        ctx.fillStyle   = sFill;
+        ctx.fillStyle = sFill;
         ctx.strokeStyle = sColor;
-        ctx.lineWidth   = 1.8 / scale;
+        ctx.lineWidth = 1.8 / scale;
         ctx.beginPath();
         ctx.roundRect(-11, -11, 22, 22, 4);
         ctx.fill();
@@ -2494,11 +2725,11 @@ function drawTableAndChairs() {
     if (tableShape === 'rectangular') {
         ctx.roundRect(tx, ty, tw, th, 10);
     } else if (tableShape === 'circular') {
-        ctx.ellipse(tcx, tcy, tw/2, th/2, 0, 0, Math.PI * 2);
+        ctx.ellipse(tcx, tcy, tw / 2, th / 2, 0, 0, Math.PI * 2);
     } else if (tableShape === 'u-shape') {
         const thickness = Math.min(tw, th) * 0.3;
-        const r = 8 / scale; 
-        
+        const r = 8 / scale;
+
         ctx.beginPath();
         ctx.moveTo(tx, ty);
         ctx.lineTo(tx, ty + th - r);
@@ -2506,7 +2737,7 @@ function drawTableAndChairs() {
         ctx.lineTo(tx + tw - r, ty + th);
         ctx.arcTo(tx + tw, ty + th, tx + tw, ty + th - r, r);
         ctx.lineTo(tx + tw, ty);
-        
+
         ctx.lineTo(tx + tw - thickness, ty);
         ctx.lineTo(tx + tw - thickness, ty + th - thickness - r);
         ctx.arcTo(tx + tw - thickness, ty + th - thickness, tx + tw - thickness - r, ty + th - thickness, r);
@@ -2515,7 +2746,7 @@ function drawTableAndChairs() {
         ctx.lineTo(tx + thickness, ty);
         ctx.closePath();
     }
-    
+
     ctx.fill();
     ctx.stroke();
 
@@ -2525,13 +2756,24 @@ function drawTableAndChairs() {
         ctx.strokeStyle = 'rgba(139,92,246,1)';
         ctx.lineWidth = 1.5 / scale;
         const hR = 4 / scale;
-        const corners = [
-            {x: tx, y: ty}, {x: tx + tw, y: ty}, 
-            {x: tx, y: ty + th}, {x: tx + tw, y: ty + th}
+        const corners = [{
+                x: tx,
+                y: ty
+            }, {
+                x: tx + tw,
+                y: ty
+            },
+            {
+                x: tx,
+                y: ty + th
+            }, {
+                x: tx + tw,
+                y: ty + th
+            }
         ];
         corners.forEach(pt => {
             ctx.beginPath();
-            ctx.arc(pt.x, pt.y, hR, 0, Math.PI*2);
+            ctx.arc(pt.x, pt.y, hR, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke();
         });
@@ -2540,7 +2782,7 @@ function drawTableAndChairs() {
     ctx.save();
     ctx.translate(tcx, tcy);
     ctx.fillStyle = 'rgba(196,181,253,0.85)';
-    ctx.scale(1/scale, 1/scale);
+    ctx.scale(1 / scale, 1 / scale);
     ctx.font = 'bold 12px Heebo, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -2556,18 +2798,23 @@ const deviceIcons = {
 };
 
 function drawDeviceBubble(cx, cy, rot, type, tagText) {
-    const nodeRadius = 20 / scale; 
-    const colors = { camera: '#0ea5e9', mic: '#f59e0b', speaker: '#10b981', display: '#8b5cf6' };
+    const nodeRadius = 20 / scale;
+    const colors = {
+        camera: '#0ea5e9',
+        mic: '#f59e0b',
+        speaker: '#10b981',
+        display: '#8b5cf6'
+    };
     const color = colors[type] || '#64748b';
 
     ctx.save();
     ctx.translate(cx, cy);
-    
+
     // Determine rotation: for cameras, rotate relative to 90 degrees. Other devices stay upright (0).
     if (type === 'camera') {
         ctx.rotate((rot - 90) * Math.PI / 180);
     }
-    
+
     // Bubble shadow and white circle
     ctx.beginPath();
     ctx.arc(0, 0, nodeRadius, 0, 2 * Math.PI);
@@ -2576,12 +2823,12 @@ function drawDeviceBubble(cx, cy, rot, type, tagText) {
     ctx.shadowBlur = 8 / scale;
     ctx.shadowOffsetY = 2 / scale;
     ctx.fill();
-    
+
     // Reset shadow
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
-    
+
     // Border
     ctx.lineWidth = 1.5 / scale;
     ctx.strokeStyle = '#e2e8f0';
@@ -2589,7 +2836,7 @@ function drawDeviceBubble(cx, cy, rot, type, tagText) {
 
     // Draw Icon 
     ctx.save();
-    const iconScale = (22 / scale) / 24; 
+    const iconScale = (22 / scale) / 24;
     ctx.scale(iconScale, iconScale);
     ctx.translate(-12, -12);
     ctx.strokeStyle = '#475569';
@@ -2605,21 +2852,21 @@ function drawDeviceBubble(cx, cy, rot, type, tagText) {
         const textW = ctx.measureText(tagText).width;
         const pillW = Math.max(24 / scale, textW + 8 / scale);
         const pillH = 14 / scale;
-        const pillY = nodeRadius - (8 / scale); 
-        
+        const pillY = nodeRadius - (8 / scale);
+
         ctx.beginPath();
         if (ctx.roundRect) {
-            ctx.roundRect(-pillW/2, pillY, pillW, pillH, pillH/2);
+            ctx.roundRect(-pillW / 2, pillY, pillW, pillH, pillH / 2);
         } else {
-            ctx.rect(-pillW/2, pillY, pillW, pillH); // fallback
+            ctx.rect(-pillW / 2, pillY, pillW, pillH); // fallback
         }
         ctx.fillStyle = color;
         ctx.fill();
-        
+
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(tagText, 0, pillY + pillH/2 + 0.5/scale);
+        ctx.fillText(tagText, 0, pillY + pillH / 2 + 0.5 / scale);
     }
     ctx.restore();
 }
@@ -2629,7 +2876,7 @@ function drawDisplays() {
     extraDisplays.forEach((d, idx) => {
         const cx = d.x * PPM;
         const cy = d.y * PPM;
-        
+
         drawDeviceBubble(cx, cy, d.rot || 90, 'display', `#${idx+1}`);
 
         if (selectedObject && selectedObject.type === 'extraDisplay' && selectedObject.id === d.id) {
@@ -2643,7 +2890,7 @@ function drawMics() {
         const cx = m.x * PPM;
         const cy = m.y * PPM;
         const r = m.radius * PPM;
-        
+
         if (r > 0 && micDisplayMode !== 'hidden') {
             ctx.beginPath();
             ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -2675,7 +2922,7 @@ function drawSpeakers() {
     extraSpeakers.forEach((s, idx) => {
         const cx = s.x * PPM;
         const cy = s.y * PPM;
-        
+
         drawDeviceBubble(cx, cy, s.rot || 90, 'speaker', `#${idx+1}`);
 
         if (selectedObject && selectedObject.type === 'extraSpeaker' && selectedObject.id === s.id) {
@@ -2687,7 +2934,7 @@ function drawSpeakers() {
 function drawSingleCamera(c, label) {
     const cx = c.x * PPM;
     const cy = c.y * PPM;
-    
+
     // For single camera, the rot is already correctly managed, but maybe we want a slightly larger bubble?
     // We can just use drawDeviceBubble
     // The "multiCamEnabled" condition is nice for tags. We can pass label directly.
@@ -2726,20 +2973,23 @@ function drawCamHandle(c) {
     ctx.strokeStyle = 'rgba(59,130,246,0.6)';
     ctx.lineWidth = 1.5 / scale;
     ctx.beginPath();
-    ctx.rect(-r, -r, r*2, r*2);
+    ctx.rect(-r, -r, r * 2, r * 2);
     ctx.stroke();
-    
+
     // Corner sizing squares (classic look)
     const cornerR = 2.5 / scale;
     ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#2563EB';
     ctx.lineWidth = 1.5 / scale;
     const corners = [
-        [-r, -r], [r, -r], [-r, r], [r, r]
+        [-r, -r],
+        [r, -r],
+        [-r, r],
+        [r, r]
     ];
     corners.forEach(([px, py]) => {
         ctx.beginPath();
-        ctx.rect(px - cornerR, py - cornerR, cornerR*2, cornerR*2);
+        ctx.rect(px - cornerR, py - cornerR, cornerR * 2, cornerR * 2);
         ctx.fill();
         ctx.stroke();
     });
@@ -2748,7 +2998,7 @@ function drawCamHandle(c) {
 
     // Hovering rotate handle at top-right
     const handleAngle = (c.rot - 45) * Math.PI / 180;
-    const dist = 48 / scale; 
+    const dist = 48 / scale;
     const hx = cx + Math.cos(handleAngle) * dist;
     const hy = cy + Math.sin(handleAngle) * dist;
 
@@ -2759,7 +3009,7 @@ function drawCamHandle(c) {
     ctx.arc(hx, hy, 5.5 / scale, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    
+
     // Tiny dot in the middle of the rotate handle
     ctx.fillStyle = '#2563EB';
     ctx.beginPath();
@@ -2771,7 +3021,7 @@ function drawRotKnob(c) {
     const cx = c.x * PPM;
     const cy = c.y * PPM;
     const handleAngle = ((c.rot || 0) - 45) * Math.PI / 180;
-    const dist = 48 / scale; 
+    const dist = 48 / scale;
     const hx = cx + Math.cos(handleAngle) * dist;
     const hy = cy + Math.sin(handleAngle) * dist;
 
@@ -2782,7 +3032,7 @@ function drawRotKnob(c) {
     ctx.arc(hx, hy, 5.5 / scale, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    
+
     ctx.fillStyle = '#2563EB';
     ctx.beginPath();
     ctx.arc(hx, hy, 2 / scale, 0, Math.PI * 2);
@@ -2792,18 +3042,18 @@ function drawRotKnob(c) {
 function drawSelectionHighlight(c) {
     const cx = c.x * PPM;
     const cy = c.y * PPM;
-    const r = 28 / scale; 
+    const r = 28 / scale;
 
     ctx.save();
     ctx.translate(cx, cy);
-    
+
     ctx.strokeStyle = '#00C09A';
     ctx.setLineDash([5 / scale, 5 / scale]);
     ctx.lineWidth = 1.5 / scale;
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.stroke();
-    
+
     ctx.restore();
 }
 
@@ -2813,16 +3063,17 @@ loadDevices();
 /* ─── DIAGRAM VIEW ─── */
 
 let diagramImageBase64 = null;
+let genericDeviceCounts = {};
 
 function setupNavigation() {
     const navBtns = document.querySelectorAll(".nav-btn[data-view]");
     navBtns.forEach(btn => {
         btn.addEventListener("click", () => {
             const view = btn.getAttribute("data-view");
-            if(view === "export") return;
-            
+            if (view === "export") return;
+
             navBtns.forEach(b => {
-                if(b.getAttribute("data-view") !== "export") b.classList.remove("active");
+                if (b.getAttribute("data-view") !== "export") b.classList.remove("active");
             });
             btn.classList.add("active");
 
@@ -2837,33 +3088,29 @@ function setupNavigation() {
 
             if (view === "canvas") {
                 canvasContainer.style.display = "";
-                topologyView.style.display = "none";
-                panelsWrap.classList.remove("slide-out");
-                statsPanel.classList.remove("slide-out");
+                if (topologyView) topologyView.style.display = "none";
+                if (panelsWrap) panelsWrap.classList.remove("slide-out");
+                if (statsPanel) statsPanel.classList.remove("slide-out");
                 if (canvasControls) canvasControls.classList.remove("slide-out");
-                if(fovTogglesWrap) fovTogglesWrap.style.display = "flex";
-                if(zoomDisplay) zoomDisplay.innerText = Math.round(scale * 100) + '%';
+                if (fovTogglesWrap) fovTogglesWrap.style.display = "flex";
+                if (zoomDisplay) zoomDisplay.innerText = Math.round(scale * 100) + '%';
                 // Re-measure and redraw after the container becomes visible again
                 // (needed after browser zoom changes while on another tab)
-                requestAnimationFrame(() => { resizeCanvas(); });
+                requestAnimationFrame(() => {
+                    resizeCanvas();
+                });
             } else if (view === "topology") {
-                canvasContainer.style.display = "none";
-                topologyView.style.display = "block";
-                panelsWrap.classList.add("slide-out");
-                statsPanel.classList.add("slide-out");
+                if (canvasContainer) canvasContainer.style.display = "none";
+                if (topologyView) topologyView.style.display = "block";
+                if (panelsWrap) panelsWrap.classList.add("slide-out");
+                if (statsPanel) statsPanel.classList.add("slide-out");
                 if (canvasControls) canvasControls.classList.add("slide-out");
-                if(fovTogglesWrap) fovTogglesWrap.style.display = "none";
-                if(zoomDisplay) zoomDisplay.innerText = '100%';
-                
-                // Restore custom prompt if available, otherwise auto-generate
-                const textarea = document.getElementById('deviceListTextarea');
-                const pending = StateManager._pendingCustomPrompt;
-                if (pending !== undefined) {
-                    if (textarea) textarea.value = pending;
-                    StateManager._pendingCustomPrompt = undefined;
-                } else if (!textarea || !textarea.value.trim()) {
-                    generateDeviceListForAI();
-                }
+                if (fovTogglesWrap) fovTogglesWrap.style.display = "none";
+                if (zoomDisplay) zoomDisplay.innerText = '100%';
+
+                // Always regenerate prompt from current room state
+                generateDeviceListForAI();
+                renderGenericButtons();
                 renderDiagramImage();
             }
         });
@@ -2871,11 +3118,10 @@ function setupNavigation() {
 }
 setupNavigation();
 
-let genericDeviceCounts = {};
 
 function generateDeviceListForAI() {
     let list = "Please create a Mermaid diagram (graph TD) connecting the following A/V equipment in our conference room. Ensure logical connections between the devices.\n\nרשימת ציוד בחדר:\n";
-    
+
     const formatGroup = (title, itemsArray) => {
         if (!itemsArray || itemsArray.length === 0) return "";
         let counts = {};
@@ -2884,19 +3130,19 @@ function generateDeviceListForAI() {
             if (!name) return;
             counts[name] = (counts[name] || 0) + 1;
         });
-        
+
         const keys = Object.keys(counts);
         if (keys.length === 0) return "";
-        
+
         let res = `\n${title}:\n`;
         for (const [name, count] of Object.entries(counts)) {
             res += `- ${name}${count > 1 ? ' x' + count : ''}\n`;
         }
         return res;
     };
-    
+
     let mainCams = [];
-    if(typeof cameras !== 'undefined' && cameras[selectedCamIdx]) {
+    if (typeof cameras !== 'undefined' && cameras[selectedCamIdx]) {
         mainCams.push(cameras[selectedCamIdx].name);
     }
     list += formatGroup("מצלמה ראשית", mainCams);
@@ -2905,22 +3151,22 @@ function generateDeviceListForAI() {
     list += formatGroup("רמקולים", extraSpeakers);
     list += formatGroup("מסכים", extraDisplays);
     list += formatGroup("ציוד נוסף", extraOthers);
-    
+
     let generics = [];
     for (const [name, count] of Object.entries(genericDeviceCounts)) {
-        for(let i=0; i<count; i++) generics.push(name);
+        for (let i = 0; i < count; i++) generics.push(name);
     }
     list += formatGroup("ציוד גנרי שהוסף", generics);
-    
+
     const textarea = document.getElementById('deviceListTextarea');
-    if(textarea) textarea.value = list.trim();
+    if (textarea) textarea.value = list.trim();
 }
 
 function renderDiagramImage() {
     const preview = document.getElementById('diagramImagePreview');
     const placeholder = document.getElementById('diagramPastePlaceholder');
     const clearBtn = document.getElementById('clearDiagramBtn');
-    
+
     if (diagramImageBase64) {
         preview.src = diagramImageBase64;
         preview.style.display = 'block';
@@ -2939,9 +3185,9 @@ function setupDiagramPaste() {
     const clearBtn = document.getElementById('clearDiagramBtn');
     const copyBtn = document.getElementById('copyDeviceListBtn');
     const textarea = document.getElementById('deviceListTextarea');
-    
+
     if (!pasteArea) return;
-    
+
     // Handle paste event anywhere in the paste area
     pasteArea.addEventListener('paste', (e) => {
         const items = e.clipboardData.items;
@@ -2959,11 +3205,11 @@ function setupDiagramPaste() {
             }
         }
     });
-    
+
     // Also allow clicking to upload a file as fallback
     pasteArea.addEventListener('click', (e) => {
         if (e.target === clearBtn || diagramImageBase64) return;
-        
+
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
@@ -2981,7 +3227,7 @@ function setupDiagramPaste() {
         };
         input.click();
     });
-    
+
     // Clear image
     if (clearBtn) {
         clearBtn.addEventListener('click', (e) => {
@@ -2991,7 +3237,7 @@ function setupDiagramPaste() {
             StateManager.saveCurrentState();
         });
     }
-    
+
     // Copy Device List
     if (copyBtn && textarea) {
         copyBtn.addEventListener('click', () => {
@@ -3004,24 +3250,95 @@ function setupDiagramPaste() {
             });
         });
     }
-    
-    // Add generic devices buttons
-    document.querySelectorAll('.add-generic-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const type = e.target.getAttribute('data-type');
-            genericDeviceCounts[type] = (genericDeviceCounts[type] || 0) + 1;
-            generateDeviceListForAI();
-            // Persist immediately — input event won't fire on programmatic .value changes
-            StateManager.saveCurrentState(true);
-        });
-    });
 
-    // Save textarea edits immediately so they are persisted
-    if (textarea) {
-        textarea.addEventListener('input', () => {
-            StateManager.saveCurrentState(true);
-        });
-    }
 }
 setupDiagramPaste();
 
+const GENERIC_DEVICE_TYPES = [{
+        type: 'Generic Screen',
+        label: 'מסך כללי'
+    },
+    {
+        type: 'Generic Projector',
+        label: 'מקרן כללי'
+    },
+    {
+        type: 'Guest Computer',
+        label: 'מחשב אורח'
+    },
+    {
+        type: 'Room Computer',
+        label: 'מחשב חדר'
+    },
+];
+
+function renderGenericButtons() {
+    const row = document.getElementById('genericDevicesRow');
+    if (!row) return;
+    row.innerHTML = '';
+
+    const btnBase = 'font-family:var(--font);flex:1;text-align:center;background:var(--surface-2);border:1px solid var(--border-med);border-radius:6px;padding:5px 4px;font-size:11px;cursor:pointer;color:var(--text-1);transition:background 0.2s;';
+    const stepperBase = 'flex:1;display:flex;align-items:center;background:var(--surface-2);border:1px solid var(--primary);border-radius:6px;overflow:hidden;min-width:0;';
+    const iconBtnBase = 'background:transparent;border:none;color:var(--text-2);padding:3px 7px;cursor:pointer;font-size:15px;flex-shrink:0;line-height:1;transition:color 0.15s;';
+
+    GENERIC_DEVICE_TYPES.forEach(({
+        type,
+        label
+    }) => {
+        const count = genericDeviceCounts[type] || 0;
+
+        if (count === 0) {
+            const btn = document.createElement('button');
+            btn.style.cssText = btnBase;
+            btn.textContent = '+ ' + label;
+            btn.addEventListener('mouseover', () => btn.style.background = 'var(--surface-3)');
+            btn.addEventListener('mouseout', () => btn.style.background = 'var(--surface-2)');
+            btn.addEventListener('click', () => {
+                genericDeviceCounts[type] = 1;
+                renderGenericButtons();
+                generateDeviceListForAI();
+                StateManager.saveCurrentState(true);
+            });
+            row.appendChild(btn);
+        } else {
+            const wrap = document.createElement('div');
+            wrap.style.cssText = stepperBase;
+
+            const minusBtn = document.createElement('button');
+            minusBtn.style.cssText = iconBtnBase;
+            minusBtn.textContent = '−';
+            minusBtn.title = 'הסר אחד';
+            minusBtn.addEventListener('mouseover', () => minusBtn.style.color = 'var(--red)');
+            minusBtn.addEventListener('mouseout', () => minusBtn.style.color = 'var(--text-2)');
+            minusBtn.addEventListener('click', () => {
+                genericDeviceCounts[type] = count - 1;
+                if (genericDeviceCounts[type] <= 0) delete genericDeviceCounts[type];
+                renderGenericButtons();
+                generateDeviceListForAI();
+                StateManager.saveCurrentState(true);
+            });
+
+            const lbl = document.createElement('span');
+            lbl.style.cssText = 'flex:1;text-align:center;font-size:11px;font-family:var(--font);color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px;';
+            lbl.textContent = label + (count > 1 ? ' ×' + count : '');
+
+            const plusBtn = document.createElement('button');
+            plusBtn.style.cssText = iconBtnBase;
+            plusBtn.textContent = '+';
+            plusBtn.title = 'הוסף עוד';
+            plusBtn.addEventListener('mouseover', () => plusBtn.style.color = 'var(--green)');
+            plusBtn.addEventListener('mouseout', () => plusBtn.style.color = 'var(--text-2)');
+            plusBtn.addEventListener('click', () => {
+                genericDeviceCounts[type] = count + 1;
+                renderGenericButtons();
+                generateDeviceListForAI();
+                StateManager.saveCurrentState(true);
+            });
+
+            wrap.appendChild(minusBtn);
+            wrap.appendChild(lbl);
+            wrap.appendChild(plusBtn);
+            row.appendChild(wrap);
+        }
+    });
+}
