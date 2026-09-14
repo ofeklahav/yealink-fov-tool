@@ -174,6 +174,24 @@ function closeCustomConfirm() {
     overlay._onConfirm = null;
 }
 
+// ── Custom Prompt Modal ──
+function showCustomPrompt(title, label, defaultValue, onConfirm) {
+    const overlay = document.getElementById('promptModal');
+    document.getElementById('promptModalTitle').textContent = title || 'הזן טקסט';
+    document.getElementById('promptModalLabel').textContent = label || 'ערך';
+    const input = document.getElementById('promptModalInput');
+    input.value = defaultValue || '';
+    overlay.classList.add('open');
+    input.focus();
+    overlay._onConfirm = onConfirm;
+}
+
+function closeCustomPrompt() {
+    const overlay = document.getElementById('promptModal');
+    overlay.classList.remove('open');
+    overlay._onConfirm = null;
+}
+
 const RULER = 0;
 const PPM = 90;
 
@@ -299,7 +317,7 @@ class StateManager {
             extraSpeakers: [],
             extraDisplays: [],
             extraOthers: [],
-            diagramImage: null,
+            diagramMermaidCode: null,
             genericDeviceCounts: {}
         };
         projects.push(newProject);
@@ -321,7 +339,7 @@ class StateManager {
             extraSpeakers,
             extraDisplays,
             extraOthers,
-            diagramImage: diagramImageBase64,
+            diagramMermaidCode: diagramMermaidCode,
             genericDeviceCounts: genericDeviceCounts
         });
     }
@@ -347,7 +365,7 @@ class StateManager {
         extraSpeakers = p.extraSpeakers ? JSON.parse(JSON.stringify(p.extraSpeakers)) : [];
         extraDisplays = p.extraDisplays ? JSON.parse(JSON.stringify(p.extraDisplays)) : [];
         extraOthers = p.extraOthers ? JSON.parse(JSON.stringify(p.extraOthers)) : [];
-        diagramImageBase64 = p.diagramImage || null;
+        diagramMermaidCode = p.diagramMermaidCode || null;
         genericDeviceCounts = p.genericDeviceCounts ? JSON.parse(JSON.stringify(p.genericDeviceCounts)) : {};
 
         const topologyView = document.getElementById("topologyView");
@@ -403,7 +421,7 @@ class StateManager {
                 extraSpeakers,
                 extraDisplays,
                 extraOthers,
-                diagramImage: diagramImageBase64,
+                diagramMermaidCode: diagramMermaidCode,
                 genericDeviceCounts: genericDeviceCounts,
                 updatedAt: new Date().toISOString()
             };
@@ -434,7 +452,7 @@ class StateManager {
             extraSpeakers = p.extraSpeakers ? JSON.parse(JSON.stringify(p.extraSpeakers)) : [];
             extraDisplays = p.extraDisplays ? JSON.parse(JSON.stringify(p.extraDisplays)) : [];
             extraOthers = p.extraOthers ? JSON.parse(JSON.stringify(p.extraOthers)) : [];
-            diagramImageBase64 = p.diagramImage || null;
+            diagramMermaidCode = p.diagramMermaidCode || null;
             genericDeviceCounts = p.genericDeviceCounts ? JSON.parse(JSON.stringify(p.genericDeviceCounts)) : {};
             this.setCurrentProjectId(id);
             undoStack = [this.captureState()];
@@ -541,6 +559,48 @@ function buildDropdown() {
     const ddText = document.getElementById('camDdText');
     const dropdown = document.getElementById('camDropdown');
 
+    const panel = scroll.parentElement;
+    if (!panel.classList.contains('has-search')) {
+        panel.classList.add('has-search');
+        panel.style.display = 'flex';
+        panel.style.flexDirection = 'column';
+        
+        const searchContainer = document.createElement('div');
+        searchContainer.className = 'cam-dd-search-container';
+        
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'cam-dd-search';
+        searchInput.placeholder = 'חיפוש...';
+        
+        searchContainer.appendChild(searchInput);
+        panel.insertBefore(searchContainer, scroll);
+        
+        searchContainer.addEventListener('click', (e) => e.stopPropagation());
+        
+        searchInput.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            const items = scroll.querySelectorAll('.cam-dd-item');
+            items.forEach(item => {
+                const name = item.querySelector('.cam-dd-name').textContent.toLowerCase();
+                if (name.includes(val)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        trigger.addEventListener('click', () => {
+            if (!dropdown.classList.contains('open')) {
+                searchInput.value = '';
+                const items = scroll.querySelectorAll('.cam-dd-item');
+                items.forEach(item => item.style.display = '');
+                setTimeout(() => searchInput.focus(), 100);
+            }
+        });
+    }
+
     cameras.forEach((c, i) => {
         if (c.name.toLowerCase() === 'mb-12x pro') return;
 
@@ -611,6 +671,48 @@ function initCustomDropdown(dropdownId, triggerId, scrollId, textId, options, on
     if (!dropdown || !trigger || !scroll || !text) return;
 
     scroll.innerHTML = '';
+
+    const panel = scroll.parentElement;
+    if (!panel.classList.contains('has-search')) {
+        panel.classList.add('has-search');
+        panel.style.display = 'flex';
+        panel.style.flexDirection = 'column';
+        
+        const searchContainer = document.createElement('div');
+        searchContainer.className = 'cam-dd-search-container';
+        
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'cam-dd-search';
+        searchInput.placeholder = 'חיפוש...';
+        
+        searchContainer.appendChild(searchInput);
+        panel.insertBefore(searchContainer, scroll);
+        
+        searchContainer.addEventListener('click', (e) => e.stopPropagation());
+        
+        searchInput.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            const items = scroll.querySelectorAll('.cam-dd-item');
+            items.forEach(item => {
+                const name = item.querySelector('.cam-dd-name').textContent.toLowerCase();
+                if (name.includes(val)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        trigger.addEventListener('click', () => {
+            if (!dropdown.classList.contains('open')) {
+                searchInput.value = '';
+                const items = scroll.querySelectorAll('.cam-dd-item');
+                items.forEach(item => item.style.display = '');
+                setTimeout(() => searchInput.focus(), 100);
+            }
+        });
+    }
 
     let activeIdx = 0;
     if (selectedValue) {
@@ -1115,6 +1217,10 @@ function init() {
                         otherAcc.removeAttribute('open');
                     }
                 });
+                // Auto-scroll the opened accordion into view
+                setTimeout(() => {
+                    acc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
             }
         });
     });
@@ -1145,25 +1251,41 @@ function init() {
         StateManager.saveCurrentState();
     });
 
-    document.querySelectorAll('#fovDisplaySegment .segment-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('#fovDisplaySegment .segment-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            fovDisplayMode = btn.dataset.val;
-            updateChairsAndDraw();
-            StateManager.saveCurrentState();
-        });
-    });
+    function updateEyeIcon(btn, mode) {
+        if (!btn) return;
+        const svg = btn.querySelector('svg');
+        if (!svg) return;
+        svg.classList.remove('eye-state-fill', 'eye-state-outline', 'eye-state-hidden');
+        if (mode === 'fill') svg.classList.add('eye-state-fill');
+        else if (mode === 'outline') svg.classList.add('eye-state-outline');
+        else svg.classList.add('eye-state-hidden');
+    }
 
-    document.querySelectorAll('#micDisplaySegment .segment-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('#micDisplaySegment .segment-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            micDisplayMode = btn.dataset.val;
+    const camEyeToggle = document.getElementById('camEyeToggle');
+    if (camEyeToggle) {
+        camEyeToggle.addEventListener('click', () => {
+            const cycle = { 'fill': 'outline', 'outline': 'hidden', 'hidden': 'fill' };
+            fovDisplayMode = cycle[fovDisplayMode] || 'fill';
+            
+            updateEyeIcon(camEyeToggle, fovDisplayMode);
+            
             updateChairsAndDraw();
             StateManager.saveCurrentState();
         });
-    });
+    }
+
+    const micEyeToggle = document.getElementById('micEyeToggle');
+    if (micEyeToggle) {
+        micEyeToggle.addEventListener('click', () => {
+            const cycle = { 'fill': 'outline', 'outline': 'hidden', 'hidden': 'fill' };
+            micDisplayMode = cycle[micDisplayMode] || 'fill';
+            
+            updateEyeIcon(micEyeToggle, micDisplayMode);
+            
+            updateChairsAndDraw();
+            StateManager.saveCurrentState();
+        });
+    }
 
     const projectNameDisplayWrap = document.getElementById('projectNameDisplayWrap');
     const renameProjectModal = document.getElementById('renameProjectModal');
@@ -1434,23 +1556,41 @@ function init() {
         if (e.target === e.currentTarget) closeCustomConfirm();
     });
 
-    // Legend Popover Interaction
+    // Custom Prompt Modal Handlers
+    document.getElementById('promptModalOkBtn').addEventListener('click', () => {
+        const overlay = document.getElementById('promptModal');
+        const cb = overlay._onConfirm;
+        const val = document.getElementById('promptModalInput').value;
+        closeCustomPrompt();
+        if (typeof cb === 'function') cb(val);
+    });
+    document.getElementById('closePromptModalBtn').addEventListener('click', closeCustomPrompt);
+    document.getElementById('promptModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeCustomPrompt();
+    });
+    document.getElementById('promptModalInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('promptModalOkBtn').click();
+        }
+    });
+
+    // Legend Modal Interaction
     const tooltipBtn = document.getElementById('legendTooltipBtn');
-    const popover = document.getElementById('legendPopover');
-    const closeBtn = document.getElementById('closeLegendBtn');
+    const legendModal = document.getElementById('legendModal');
+    const closeLegendModalBtn = document.getElementById('closeLegendModalBtn');
 
-    tooltipBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        popover.classList.toggle('open');
+    tooltipBtn.addEventListener('click', () => {
+        legendModal.classList.add('open');
     });
 
-    closeBtn.addEventListener('click', () => {
-        popover.classList.remove('open');
+    closeLegendModalBtn.addEventListener('click', () => {
+        legendModal.classList.remove('open');
     });
 
-    document.addEventListener('click', (e) => {
-        if (!popover.contains(e.target) && e.target !== tooltipBtn) {
-            popover.classList.remove('open');
+    legendModal.addEventListener('click', (e) => {
+        if (e.target === legendModal) {
+            legendModal.classList.remove('open');
         }
     });
 
@@ -1487,6 +1627,10 @@ function init() {
             }
             if (document.getElementById('promptModal').classList.contains('open')) {
                 document.getElementById('promptModal').classList.remove('open');
+                return;
+            }
+            if (document.getElementById('legendModal') && document.getElementById('legendModal').classList.contains('open')) {
+                document.getElementById('legendModal').classList.remove('open');
                 return;
             }
         }
@@ -1546,9 +1690,27 @@ function init() {
     });
 
     // Controls
-    document.getElementById('btnZoomIn').addEventListener('click', () => zoomBy(1.2));
-    document.getElementById('btnZoomOut').addEventListener('click', () => zoomBy(1 / 1.2));
-    document.getElementById('btnResetView').addEventListener('click', centerRoom);
+    document.getElementById('btnZoomIn').addEventListener('click', () => {
+        if (document.getElementById('topologyView') && document.getElementById('topologyView').style.display === 'block') {
+            if (typeof zoomDiagramBy === 'function') zoomDiagramBy(1.2);
+        } else {
+            zoomBy(1.2);
+        }
+    });
+    document.getElementById('btnZoomOut').addEventListener('click', () => {
+        if (document.getElementById('topologyView') && document.getElementById('topologyView').style.display === 'block') {
+            if (typeof zoomDiagramBy === 'function') zoomDiagramBy(1 / 1.2);
+        } else {
+            zoomBy(1 / 1.2);
+        }
+    });
+    document.getElementById('btnResetView').addEventListener('click', () => {
+        if (document.getElementById('topologyView') && document.getElementById('topologyView').style.display === 'block') {
+            if (typeof centerDiagram === 'function') centerDiagram();
+        } else {
+            centerRoom();
+        }
+    });
 
     const btnUndo = document.getElementById('btnUndo');
     if (btnUndo) btnUndo.addEventListener('click', () => StateManager.undo());
@@ -3062,8 +3224,135 @@ loadDevices();
 
 /* ─── DIAGRAM VIEW ─── */
 
-let diagramImageBase64 = null;
+let diagramMermaidCode = null;
 let genericDeviceCounts = {};
+
+// Diagram Pan/Zoom state
+let diagramScale = 1;
+let diagramOffsetX = 0;
+let diagramOffsetY = 0;
+let isDiagramDragging = false;
+let diagramDragStartX = 0;
+let diagramDragStartY = 0;
+
+function zoomDiagramBy(factor) {
+    diagramScale *= factor;
+    diagramScale = Math.max(0.1, Math.min(diagramScale, 10));
+    updateDiagramTransform();
+}
+
+function centerDiagram() {
+    diagramScale = 1;
+    diagramOffsetX = 0;
+    diagramOffsetY = 0;
+    updateDiagramTransform();
+}
+
+function updateDiagramTransform() {
+    const output = document.getElementById('mermaidOutput');
+    if (output) {
+        output.style.transform = `translate(${diagramOffsetX}px, ${diagramOffsetY}px) scale(${diagramScale})`;
+        // Using transform origin center allows zooming around the center of the viewport
+        output.style.transformOrigin = 'center';
+    }
+    const zoomDisplay = document.getElementById("zoomDisplay");
+    if (zoomDisplay) zoomDisplay.innerText = Math.round(diagramScale * 100) + '%';
+}
+
+const diagramContainer = document.getElementById('mermaidOutputContainer');
+if (diagramContainer) {
+    diagramContainer.addEventListener('wheel', (e) => {
+        if (document.getElementById('topologyView').style.display !== 'block') return;
+        e.preventDefault();
+        
+        if (e.ctrlKey) {
+            // Pinch-to-zoom on trackpad or Ctrl + Mouse Wheel
+            const zoomIntensity = 0.005;
+            const delta = -e.deltaY * zoomIntensity;
+            const factor = Math.exp(delta);
+            zoomDiagramBy(factor);
+        } else {
+            // Two-finger swipe to pan (or normal mouse wheel)
+            diagramOffsetX -= e.deltaX;
+            diagramOffsetY -= e.deltaY;
+            updateDiagramTransform();
+        }
+    }, { passive: false });
+
+    diagramContainer.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 && e.button !== 1) return; // Only left or middle click to pan
+        if (e.target.closest('input, button, textarea, .edgeLabel, .label')) return; // Don't pan if clicking an editable element
+        isDiagramDragging = true;
+        diagramDragStartX = e.clientX - diagramOffsetX;
+        diagramDragStartY = e.clientY - diagramOffsetY;
+        diagramContainer.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('pointermove', (e) => {
+        if (!isDiagramDragging) return;
+        diagramOffsetX = e.clientX - diagramDragStartX;
+        diagramOffsetY = e.clientY - diagramDragStartY;
+        updateDiagramTransform();
+    });
+
+    window.addEventListener('pointerup', () => {
+        if (isDiagramDragging) {
+            isDiagramDragging = false;
+            diagramContainer.style.cursor = 'default';
+        }
+    });
+}
+
+// Topology Panel Collapse Logic
+const collapseTopologyRightBtn = document.getElementById('collapseTopologyRightBtn');
+const collapseTopologyLeftBtn = document.getElementById('collapseTopologyLeftBtn');
+const uncollapseTopologyRightBtn = document.getElementById('uncollapseTopologyRightBtn');
+const uncollapseTopologyLeftBtn = document.getElementById('uncollapseTopologyLeftBtn');
+const topologyRightPanel = document.getElementById('topologyRightPanel');
+const topologyLeftPanel = document.getElementById('topologyLeftPanel');
+
+if (collapseTopologyRightBtn && topologyRightPanel) {
+    collapseTopologyRightBtn.addEventListener('click', () => {
+        topologyRightPanel.classList.add('collapsed-right');
+        if (uncollapseTopologyRightBtn) {
+            uncollapseTopologyRightBtn.style.display = 'flex';
+            uncollapseTopologyRightBtn.offsetHeight; // force reflow
+            uncollapseTopologyRightBtn.classList.add('visible');
+        }
+    });
+}
+if (uncollapseTopologyRightBtn && topologyRightPanel) {
+    uncollapseTopologyRightBtn.addEventListener('click', () => {
+        uncollapseTopologyRightBtn.classList.remove('visible');
+        topologyRightPanel.classList.remove('collapsed-right');
+        setTimeout(() => {
+            if (!topologyRightPanel.classList.contains('collapsed-right')) {
+                uncollapseTopologyRightBtn.style.display = 'none';
+            }
+        }, 300);
+    });
+}
+if (collapseTopologyLeftBtn && topologyLeftPanel) {
+    collapseTopologyLeftBtn.addEventListener('click', () => {
+        topologyLeftPanel.classList.add('collapsed-left');
+        if (uncollapseTopologyLeftBtn) {
+            uncollapseTopologyLeftBtn.style.display = 'flex';
+            uncollapseTopologyLeftBtn.offsetHeight; // force reflow
+            uncollapseTopologyLeftBtn.classList.add('visible');
+        }
+    });
+}
+if (uncollapseTopologyLeftBtn && topologyLeftPanel) {
+    uncollapseTopologyLeftBtn.addEventListener('click', () => {
+        uncollapseTopologyLeftBtn.classList.remove('visible');
+        topologyLeftPanel.classList.remove('collapsed-left');
+        setTimeout(() => {
+            if (!topologyLeftPanel.classList.contains('collapsed-left')) {
+                uncollapseTopologyLeftBtn.style.display = 'none';
+            }
+        }, 300);
+    });
+}
 
 function setupNavigation() {
     const navBtns = document.querySelectorAll(".nav-btn[data-view]");
@@ -3086,14 +3375,23 @@ function setupNavigation() {
             const fovTogglesWrap = document.getElementById("fovTogglesWrap");
             const zoomDisplay = document.getElementById("zoomDisplay");
 
+            const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
+
             if (view === "canvas") {
                 canvasContainer.style.display = "";
                 if (topologyView) topologyView.style.display = "none";
                 if (panelsWrap) panelsWrap.classList.remove("slide-out");
                 if (statsPanel) statsPanel.classList.remove("slide-out");
-                if (canvasControls) canvasControls.classList.remove("slide-out");
+                if (canvasControls) {
+                    canvasControls.classList.remove("slide-out");
+                    canvasControls.classList.remove("topology-controls");
+                }
                 if (fovTogglesWrap) fovTogglesWrap.style.display = "flex";
                 if (zoomDisplay) zoomDisplay.innerText = Math.round(scale * 100) + '%';
+                if (toggleSidebarBtn && document.getElementById('sidebar').classList.contains('collapsed')) {
+                    toggleSidebarBtn.style.display = 'flex';
+                    toggleSidebarBtn.classList.add('visible');
+                }
                 // Re-measure and redraw after the container becomes visible again
                 // (needed after browser zoom changes while on another tab)
                 requestAnimationFrame(() => {
@@ -3104,9 +3402,16 @@ function setupNavigation() {
                 if (topologyView) topologyView.style.display = "block";
                 if (panelsWrap) panelsWrap.classList.add("slide-out");
                 if (statsPanel) statsPanel.classList.add("slide-out");
-                if (canvasControls) canvasControls.classList.add("slide-out");
+                if (canvasControls) {
+                    canvasControls.classList.remove("slide-out"); // keep zoom controls visible
+                    canvasControls.classList.add("topology-controls"); // center them over diagram
+                }
                 if (fovTogglesWrap) fovTogglesWrap.style.display = "none";
-                if (zoomDisplay) zoomDisplay.innerText = '100%';
+                if (zoomDisplay) zoomDisplay.innerText = Math.round(diagramScale * 100) + '%';
+                if (toggleSidebarBtn) {
+                    toggleSidebarBtn.classList.remove('visible');
+                    toggleSidebarBtn.style.display = 'none';
+                }
 
                 // Always regenerate prompt from current room state
                 generateDeviceListForAI();
@@ -3162,79 +3467,192 @@ function generateDeviceListForAI() {
     if (textarea) textarea.value = list.trim();
 }
 
-function renderDiagramImage() {
-    const preview = document.getElementById('diagramImagePreview');
-    const placeholder = document.getElementById('diagramPastePlaceholder');
-    const clearBtn = document.getElementById('clearDiagramBtn');
+if (typeof mermaid !== 'undefined') {
+    mermaid.initialize({ 
+        startOnLoad: false, 
+        theme: 'default',
+        themeCSS: '.node rect { rx: 8px !important; ry: 8px !important; } .label { cursor: pointer; } .edgeLabel { cursor: pointer; }' 
+    });
+}
 
-    if (diagramImageBase64) {
-        preview.src = diagramImageBase64;
-        preview.style.display = 'block';
-        placeholder.style.display = 'none';
-        clearBtn.style.display = 'block';
-    } else {
-        preview.src = '';
-        preview.style.display = 'none';
+async function renderDiagramImage() {
+    const output = document.getElementById('mermaidOutput');
+    const placeholder = document.getElementById('mermaidOutputPlaceholder');
+    const clearBtn = document.getElementById('clearDiagramBtn');
+    const input = document.getElementById('mermaidInput');
+    
+    if (input && diagramMermaidCode !== input.value && document.activeElement !== input) {
+        input.value = diagramMermaidCode || '';
+    }
+
+    if (!diagramMermaidCode || !diagramMermaidCode.trim()) {
+        output.style.display = 'none';
         placeholder.style.display = 'block';
-        clearBtn.style.display = 'none';
+        if (clearBtn) clearBtn.style.display = 'none';
+        output.innerHTML = '';
+        return;
+    }
+
+    placeholder.style.display = 'none';
+    output.style.display = 'flex';
+    if (clearBtn) clearBtn.style.display = 'block';
+
+    try {
+        const { svg } = await mermaid.render('mermaid-svg-' + Date.now(), diagramMermaidCode);
+        output.innerHTML = svg;
+        const svgElement = output.querySelector('svg');
+        if(svgElement) {
+            svgElement.style.maxWidth = '85%';
+            svgElement.style.maxHeight = '85%';
+            svgElement.style.height = 'auto';
+            svgElement.style.width = 'auto';
+        }
+    } catch (e) {
+        output.innerHTML = `<div style="color: red; direction: ltr; text-align: left; padding: 10px;">Syntax Error:<br>${e.message}</div>`;
     }
 }
 
 function setupDiagramPaste() {
-    const pasteArea = document.getElementById('diagramPasteArea');
+    const inputArea = document.getElementById('mermaidInput');
     const clearBtn = document.getElementById('clearDiagramBtn');
     const copyBtn = document.getElementById('copyDeviceListBtn');
     const textarea = document.getElementById('deviceListTextarea');
 
-    if (!pasteArea) return;
+    if (inputArea) {
+        inputArea.addEventListener('input', (e) => {
+            diagramMermaidCode = e.target.value;
+            renderDiagramImage();
+            StateManager.saveCurrentState();
+        });
+    }
 
-    // Handle paste event anywhere in the paste area
-    pasteArea.addEventListener('paste', (e) => {
-        const items = e.clipboardData.items;
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1) {
-                const blob = items[i].getAsFile();
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    diagramImageBase64 = event.target.result;
-                    renderDiagramImage();
-                    StateManager.saveCurrentState();
-                };
-                reader.readAsDataURL(blob);
-                break;
-            }
-        }
-    });
-
-    // Also allow clicking to upload a file as fallback
-    pasteArea.addEventListener('click', (e) => {
-        if (e.target === clearBtn || diagramImageBase64) return;
-
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = (ev) => {
-            const file = ev.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    diagramImageBase64 = event.target.result;
-                    renderDiagramImage();
-                    StateManager.saveCurrentState();
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-        input.click();
-    });
-
-    // Clear image
+    // Clear diagram
     if (clearBtn) {
         clearBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            diagramImageBase64 = null;
+            diagramMermaidCode = '';
+            if (inputArea) inputArea.value = '';
             renderDiagramImage();
             StateManager.saveCurrentState();
+        });
+    }
+
+    // Editable edges and nodes
+    const outputArea = document.getElementById('mermaidOutput');
+
+    if (outputArea) {
+        let currentOldText = '';
+        let currentMatchIndex = 0;
+
+        outputArea.addEventListener('click', (e) => {
+            const edgeLabel = e.target.closest('.edgeLabel, .edge-label, .label, foreignObject, .node');
+            
+            if (edgeLabel && edgeLabel.textContent.trim()) {
+                // Find the innermost text element
+                const leaves = Array.from(outputArea.querySelectorAll('*')).filter(el => el.children.length === 0 && el.textContent.trim());
+                let textEl = e.target;
+                if (textEl.children.length > 0) {
+                    const leaf = Array.from(e.target.querySelectorAll('*')).find(el => el.children.length === 0 && el.textContent.trim() === edgeLabel.textContent.trim());
+                    if (leaf) textEl = leaf;
+                }
+                
+                // Check if it's an HTML element that can be made contenteditable
+                const tagName = textEl.tagName.toLowerCase();
+                if (['span', 'div', 'p', 'b', 'i', 'strong', 'em'].includes(tagName)) {
+                    // Replace <br> with space for stable old text comparison
+                    const getCleanText = (el) => {
+                        let temp = document.createElement('div');
+                        temp.innerHTML = el.innerHTML.replace(/<br\s*\/?>/gi, ' ');
+                        return temp.textContent.trim();
+                    };
+                    
+                    currentOldText = getCleanText(edgeLabel);
+                    
+                    const matchingLeaves = leaves.filter(el => getCleanText(el) === currentOldText);
+                    let n = matchingLeaves.indexOf(textEl);
+                    if (n === -1) {
+                        n = matchingLeaves.indexOf(e.target);
+                    }
+                    currentMatchIndex = Math.max(0, n);
+                    
+                    // Make it editable
+                    textEl.setAttribute('contenteditable', 'true');
+                    textEl.style.outline = 'none';
+                    textEl.style.cursor = 'text';
+                    textEl.style.minWidth = '20px';
+                    textEl.style.display = 'inline-block';
+                    textEl.focus();
+                    
+                    // Select all text
+                    const range = document.createRange();
+                    range.selectNodeContents(textEl);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    
+                    let committed = false;
+                    
+                    const commitEdit = () => {
+                        if (committed) return;
+                        committed = true;
+                        
+                        textEl.removeAttribute('contenteditable');
+                        textEl.style.cursor = '';
+                        
+                        const newText = getCleanText(textEl);
+                        if (newText && newText !== currentOldText) {
+                            const flexibleOld = currentOldText.split(/\s+/).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('(?:\\s+|<br\\s*\\/?>|\\\\n|\\\\r)+');
+                            const regex = new RegExp(`([\\[\\(\\{\\"\\|]|--\\s*|==\\s*)\\s*(${flexibleOld})\\s*([\\]\\)\\}\\"\\|]|\\s*---|\\s*===|\\s*-->|\\s*==>)`, 'gi');
+                            
+                            let count = 0;
+                            let replaced = false;
+                            let modified = diagramMermaidCode.replace(regex, (match, p1, p2, p3) => {
+                                if (count === currentMatchIndex && !replaced) {
+                                    replaced = true;
+                                    return `${p1}${newText}${p3}`;
+                                }
+                                count++;
+                                return match;
+                            });
+
+                            if (!replaced) {
+                                const fallbackRegex = new RegExp(flexibleOld, 'gi');
+                                count = 0;
+                                modified = diagramMermaidCode.replace(fallbackRegex, (match) => {
+                                    if (count === currentMatchIndex && !replaced) {
+                                        replaced = true;
+                                        return newText;
+                                    }
+                                    count++;
+                                    return match;
+                                });
+                            }
+                            
+                            if (!replaced) {
+                                modified = diagramMermaidCode.replace(currentOldText, newText);
+                            }
+
+                            diagramMermaidCode = modified;
+                            if (inputArea) inputArea.value = diagramMermaidCode;
+                            renderDiagramImage();
+                            StateManager.saveCurrentState();
+                        } else {
+                            // revert content without breaking HTML
+                            renderDiagramImage();
+                        }
+                    };
+                    
+                    textEl.addEventListener('blur', commitEdit, { once: true });
+                    textEl.addEventListener('keydown', (evt) => {
+                        if (evt.key === 'Enter') {
+                            evt.preventDefault();
+                            textEl.blur();
+                        } else if (evt.key === 'Escape') {
+                            renderDiagramImage(); // Reverts without saving
+                        }
+                    });
+                }
+            }
         });
     }
 
@@ -3250,7 +3668,6 @@ function setupDiagramPaste() {
             });
         });
     }
-
 }
 setupDiagramPaste();
 
