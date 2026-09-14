@@ -182,12 +182,8 @@
                             </button>
                         </div>
                         <textarea id="deviceListTextarea" style="flex: 1; width: 100%; background: var(--surface-2); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; color: var(--text-2); font-size: 13px; font-family: monospace; resize: none; outline: none;"></textarea>
-                        <div style="display: flex; flex-wrap: nowrap; gap: 6px; margin-top: 12px;">
-                            <button class="add-generic-btn" data-type="Generic Screen" style="font-family: var(--font); flex: 1; text-align: center; background: var(--surface-2); border: 1px solid var(--border-med); border-radius: 6px; padding: 5px 4px; font-size: 11px; cursor: pointer; color: var(--text); transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface-2)'">+ מסך כללי</button>
-                            <button class="add-generic-btn" data-type="Generic Projector" style="font-family: var(--font); flex: 1; text-align: center; background: var(--surface-2); border: 1px solid var(--border-med); border-radius: 6px; padding: 5px 4px; font-size: 11px; cursor: pointer; color: var(--text); transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface-2)'">+ מקרן כללי</button>
-                            <button class="add-generic-btn" data-type="Guest Computer" style="font-family: var(--font); flex: 1; text-align: center; background: var(--surface-2); border: 1px solid var(--border-med); border-radius: 6px; padding: 5px 4px; font-size: 11px; cursor: pointer; color: var(--text); transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface-2)'">+ מחשב אורח</button>
-                            <button class="add-generic-btn" data-type="Room Computer" style="font-family: var(--font); flex: 1; text-align: center; background: var(--surface-2); border: 1px solid var(--border-med); border-radius: 6px; padding: 5px 4px; font-size: 11px; cursor: pointer; color: var(--text); transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface-2)'">+ מחשב חדר</button>
-                        </div>
+                        <div id="genericDevicesRow" style="display: flex; flex-wrap: nowrap; gap: 6px; margin-top: 12px;"></div>
+
                     </div>
                 </div>
 
