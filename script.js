@@ -145,6 +145,22 @@ function closeCustomAlert() {
     document.getElementById('alertModal').classList.remove('open');
 }
 
+// ── Custom Confirm Modal ──
+function showCustomConfirm(msg, title, onConfirm) {
+    const overlay = document.getElementById('confirmModal');
+    document.getElementById('confirmModalTitle').textContent = title || 'אישור';
+    document.getElementById('confirmModalMessage').textContent = msg;
+    overlay.classList.add('open');
+    // Store callback on the overlay so the button handlers can reach it
+    overlay._onConfirm = onConfirm;
+}
+
+function closeCustomConfirm() {
+    const overlay = document.getElementById('confirmModal');
+    overlay.classList.remove('open');
+    overlay._onConfirm = null;
+}
+
 const RULER = 0;
 const PPM = 90;
 
@@ -187,7 +203,7 @@ let dragOffset = { x: 0, y: 0 };
 let lastMouse = { x: 0, y: 0 };
 
 // ── Camera & Lens Selection ──
-let selectedCamIdx = 4; // MeetingBar A40
+let selectedCamIdx = -1; // No camera by default
 let selectedLensIdx = 0;
 
 let undoStack = [];
@@ -225,7 +241,7 @@ class StateManager {
             table: { x: 2.4, y: 3.0, w: 1.4, h: 2.4 },
             tableShape: 'rectangular',
             cam: { x: 2.4, y: 0.1, rot: 90, hfov: 110, dofMax: null, audioRadius: null },
-            selectedCamIdx: 4,
+            selectedCamIdx: -1,
             selectedLensIdx: 0,
             multiCamEnabled: false,
             multiCamGroup: 'avhub',
@@ -233,16 +249,23 @@ class StateManager {
             extraMics: [],
             extraSpeakers: [],
             extraDisplays: [],
-            extraOthers: []
+            extraOthers: [],
+            diagramImage: null,
+            genericDeviceCounts: {},
+            customPromptText: null
         };
         projects.push(newProject);
         this.saveProjects(projects);
         return newProject;
     }
     static captureState() {
+        const textarea = document.getElementById('deviceListTextarea');
         return JSON.stringify({
             room, table, tableShape, cam, selectedCamIdx, selectedLensIdx,
-            multiCamEnabled, multiCamGroup, extraCams, extraMics, extraSpeakers, extraDisplays, extraOthers
+            multiCamEnabled, multiCamGroup, extraCams, extraMics, extraSpeakers, extraDisplays, extraOthers,
+            diagramImage: diagramImageBase64,
+            genericDeviceCounts: genericDeviceCounts,
+            customPromptText: textarea ? textarea.value : null
         });
     }
     static applyState(stateStr) {
@@ -261,6 +284,19 @@ class StateManager {
         extraSpeakers = p.extraSpeakers ? JSON.parse(JSON.stringify(p.extraSpeakers)) : [];
         extraDisplays = p.extraDisplays ? JSON.parse(JSON.stringify(p.extraDisplays)) : [];
         extraOthers = p.extraOthers ? JSON.parse(JSON.stringify(p.extraOthers)) : [];
+        diagramImageBase64 = p.diagramImage || null;
+        genericDeviceCounts = p.genericDeviceCounts ? JSON.parse(JSON.stringify(p.genericDeviceCounts)) : {};
+        
+        const topologyView = document.getElementById("topologyView");
+        if (topologyView && topologyView.style.display === "block") {
+            if (p.customPromptText != null) {
+                const textarea = document.getElementById('deviceListTextarea');
+                if (textarea) textarea.value = p.customPromptText;
+            } else {
+                generateDeviceListForAI();
+            }
+            renderDiagramImage();
+        }
         syncUIWithState();
     }
     static undo() {
@@ -293,10 +329,14 @@ class StateManager {
         const projects = this.getProjects();
         const idx = projects.findIndex(p => p.id === currentId);
         if (idx !== -1) {
+            const textarea = document.getElementById('deviceListTextarea');
             projects[idx] = {
                 ...projects[idx],
                 room, table, tableShape, cam, selectedCamIdx, selectedLensIdx,
                 multiCamEnabled, multiCamGroup, extraCams, extraMics, extraSpeakers, extraDisplays, extraOthers,
+                diagramImage: diagramImageBase64,
+                genericDeviceCounts: genericDeviceCounts,
+                customPromptText: textarea ? textarea.value : (projects[idx].customPromptText || null),
                 updatedAt: new Date().toISOString()
             };
             this.saveProjects(projects);
@@ -310,7 +350,6 @@ class StateManager {
             room = { ...p.room };
             table = { ...p.table };
             tableShape = p.tableShape || 'rectangular';
-            tableShape = p.tableShape || 'rectangular';
             cam = { ...p.cam };
             selectedCamIdx = p.selectedCamIdx;
             selectedLensIdx = p.selectedLensIdx;
@@ -320,7 +359,12 @@ class StateManager {
             extraMics = p.extraMics ? JSON.parse(JSON.stringify(p.extraMics)) : [];
             extraSpeakers = p.extraSpeakers ? JSON.parse(JSON.stringify(p.extraSpeakers)) : [];
             extraDisplays = p.extraDisplays ? JSON.parse(JSON.stringify(p.extraDisplays)) : [];
+            extraOthers = p.extraOthers ? JSON.parse(JSON.stringify(p.extraOthers)) : [];
+            diagramImageBase64 = p.diagramImage || null;
+            genericDeviceCounts = p.genericDeviceCounts ? JSON.parse(JSON.stringify(p.genericDeviceCounts)) : {};
             this.setCurrentProjectId(id);
+            // Restore custom prompt after state is ready
+            this._pendingCustomPrompt = p.customPromptText != null ? p.customPromptText : undefined;
             undoStack = [this.captureState()];
             redoStack = [];
             
@@ -473,7 +517,7 @@ function buildDropdown() {
         scroll.appendChild(item);
     });
 
-    ddText.textContent = cameras[selectedCamIdx].name;
+    ddText.textContent = selectedCamIdx >= 0 ? cameras[selectedCamIdx].name : 'ללא מצלמה';
 
     trigger.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -547,7 +591,7 @@ function disableMultiCam() {
 
 let selectedExtraCam = null;
 function populateAddCamOptions(group) {
-    const mainCam = cameras[selectedCamIdx];
+    const mainCam = selectedCamIdx >= 0 ? cameras[selectedCamIdx] : null;
     const isMeetingBoardPro = mainCam && mainCam.name.toLowerCase() === 'meetingboard pro';
 
     const filtered = cameras.filter(device => {
@@ -800,6 +844,10 @@ function showAppBody() {
     document.getElementById('navDashboardBtn').style.display = 'block';
     document.getElementById('topbarNav').style.display = 'flex';
     document.getElementById('undoRedoControls').style.display = 'flex';
+    
+    // Always default to Canvas view when opening a project
+    const canvasBtn = document.querySelector('.nav-btn[data-view="canvas"]');
+    if(canvasBtn) canvasBtn.click();
     // Ensure sidebar is visible and external toggle is hidden when entering app view
     const sidebar = document.getElementById('sidebar');
     sidebar.classList.remove('collapsed');
@@ -840,20 +888,25 @@ function syncUIWithState() {
 
     updateDropdownDisabledState();
 
-    const currentCam = cameras[selectedCamIdx];
-    document.getElementById('camDdText').textContent = currentCam.name;
+    const currentCam = selectedCamIdx >= 0 ? cameras[selectedCamIdx] : null;
+    document.getElementById('camDdText').textContent = currentCam ? currentCam.name : 'ללא מצלמה';
     const scroll = document.getElementById('camScroll');
     scroll.querySelectorAll('.cam-dd-item').forEach((el, j) => {
         el.classList.toggle('active', j === selectedCamIdx);
     });
 
-    applyLensToMainCam(currentCam, selectedLensIdx);
-    renderLensSegment(currentCam, selectedLensIdx, (lensI) => {
-        selectedLensIdx = lensI;
-        applyLensToMainCam(currentCam, lensI);
-        updateChairsAndDraw();
-        StateManager.saveCurrentState();
-    });
+    if (currentCam) {
+        applyLensToMainCam(currentCam, selectedLensIdx);
+        renderLensSegment(currentCam, selectedLensIdx, (lensI) => {
+            selectedLensIdx = lensI;
+            applyLensToMainCam(currentCam, lensI);
+            updateChairsAndDraw();
+            StateManager.saveCurrentState();
+        });
+    } else {
+        const lensSegment = document.getElementById('lensSegment');
+        if (lensSegment) lensSegment.innerHTML = '';
+    }
 
     updateChairsAndDraw();
     resizeCanvas();
@@ -885,10 +938,14 @@ function renderDashboard() {
         delBtn.style.cssText = 'position: absolute; top: 10px; left: 10px; background: transparent; border: none; font-size: 18px; color: var(--text-3); cursor: pointer;';
         delBtn.onclick = (e) => {
             e.stopPropagation();
-            if (confirm('האם אתה בטוח שברצונך למחוק פרויקט זה?')) {
-                StateManager.deleteProject(p.id);
-                renderDashboard();
-            }
+            showCustomConfirm(
+                `האם אתה בטוח שברצונך למחוק את "${p.name}"?`,
+                'מחיקת פרויקט',
+                () => {
+                    StateManager.deleteProject(p.id);
+                    renderDashboard();
+                }
+            );
         };
         card.style.position = 'relative';
         card.appendChild(delBtn);
@@ -1086,9 +1143,9 @@ function init() {
     const addBtn = document.getElementById('addCamBtn');
 
     toggle.addEventListener('change', (e) => {
-        const activeCam = cameras[selectedCamIdx];
+        const activeCam = selectedCamIdx >= 0 ? cameras[selectedCamIdx] : null;
         if (e.target.checked) {
-            if (activeCam.supports_avhub) {
+            if (activeCam && activeCam.supports_avhub) {
                 showCustomAlert("שים לב: מצב ריבוי מצלמות דורש יחידת AVHub לניהול וחיבור המצלמות.", "מצב AVHub");
                 multiCamEnabled = true;
                 multiCamGroup = 'avhub';
@@ -1108,7 +1165,7 @@ function init() {
                 
                 updateDropdownDisabledState();
                 renderExtraCamsList();
-            } else if (activeCam.supports_mtower) {
+            } else if (activeCam && activeCam.supports_mtower) {
                 showCustomAlert("שים לב: במצלמה זו ניתן לחבר מצלמת MTower כהרחבה שולחנית ללא צורך ב-AVHub.", "מצלמת MTower");
                 multiCamEnabled = true;
                 multiCamGroup = 'mtower';
@@ -1263,6 +1320,19 @@ function init() {
         if (e.target === e.currentTarget) closeCustomAlert();
     });
 
+    // Custom Confirm Modal Handlers
+    document.getElementById('confirmModalOkBtn').addEventListener('click', () => {
+        const overlay = document.getElementById('confirmModal');
+        const cb = overlay._onConfirm;
+        closeCustomConfirm();
+        if (typeof cb === 'function') cb();
+    });
+    document.getElementById('confirmModalCancelBtn').addEventListener('click', closeCustomConfirm);
+    document.getElementById('closeConfirmModalBtn').addEventListener('click', closeCustomConfirm);
+    document.getElementById('confirmModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeCustomConfirm();
+    });
+
     // Legend Popover Interaction
     const tooltipBtn = document.getElementById('legendTooltipBtn');
     const popover = document.getElementById('legendPopover');
@@ -1296,6 +1366,25 @@ function init() {
     canvas.addEventListener('pointerleave', onPointerUp);
     
     document.addEventListener('keydown', (e) => {
+        // Close any open modal on Escape
+        if (e.key === 'Escape') {
+            if (document.getElementById('confirmModal').classList.contains('open')) {
+                closeCustomConfirm(); return;
+            }
+            if (document.getElementById('alertModal').classList.contains('open')) {
+                closeCustomAlert(); return;
+            }
+            if (document.getElementById('newProjectModal').classList.contains('open')) {
+                document.getElementById('newProjectModal').classList.remove('open'); return;
+            }
+            if (document.getElementById('renameProjectModal').classList.contains('open')) {
+                document.getElementById('renameProjectModal').classList.remove('open'); return;
+            }
+            if (document.getElementById('promptModal').classList.contains('open')) {
+                document.getElementById('promptModal').classList.remove('open'); return;
+            }
+        }
+
         // Undo / Redo
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
             if (e.shiftKey) StateManager.redo();
@@ -1311,6 +1400,19 @@ function init() {
 
         if (e.key === 'Backspace' || e.key === 'Delete') {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (selectedObject === 'cam') {
+                selectedCamIdx = -1;
+                selectedObject = null;
+                document.getElementById('camDdText').textContent = 'ללא מצלמה';
+                document.querySelectorAll('.cam-dd-item').forEach(el => el.classList.remove('active'));
+                updateChairsAndDraw();
+                if (document.getElementById('topologyView').style.display === 'block') {
+                    generateDeviceListForAI();
+                }
+                draw();
+                StateManager.saveState();
+                return;
+            }
             if (selectedObject && typeof selectedObject === 'object') {
                 if (selectedObject.type === 'extraCam') {
                     extraCams = extraCams.filter(c => c.id !== selectedObject.id);
@@ -1378,6 +1480,16 @@ function resizeCanvas() {
 }
 
 function centerRoom() {
+    if (document.getElementById('topologyView') && document.getElementById('topologyView').style.display === 'block') {
+        if(typeof topScale !== 'undefined') {
+            topScale = 1;
+            topOffsetX = 0;
+            topOffsetY = 0;
+            if(typeof updateTopologyTransform === 'function') updateTopologyTransform();
+        }
+        return;
+    }
+
     scale = 1.0;
     offsetX = (canvas.width - RULER - room.w * PPM) / 2;
     offsetY = (canvas.height - RULER - room.h * PPM) / 2;
@@ -1386,6 +1498,15 @@ function centerRoom() {
 }
 
 function zoomBy(factor) {
+    if (document.getElementById('topologyView') && document.getElementById('topologyView').style.display === 'block') {
+        if(typeof topScale !== 'undefined') {
+            topScale *= factor;
+            topScale = Math.max(0.2, Math.min(topScale, 5));
+            if(typeof updateTopologyTransform === 'function') updateTopologyTransform();
+        }
+        return;
+    }
+
     let newScale = scale * factor;
     newScale = Math.max(0.2, Math.min(newScale, 5));
     
@@ -1536,7 +1657,7 @@ function checkSingleCamCoverage(c, px, py) {
 }
 
 function checkFovCoverage(px, py) {
-    if (checkSingleCamCoverage(cam, px, py)) return true;
+    if (selectedCamIdx >= 0 && checkSingleCamCoverage(cam, px, py)) return true;
     if (multiCamEnabled) {
         return extraCams.some(ec => checkSingleCamCoverage(ec, px, py));
     }
@@ -1548,7 +1669,7 @@ function checkMicCoverage(px, py) {
     let covered = false;
 
     // Check main camera mic
-    if (cam.audioRadius) {
+    if (selectedCamIdx >= 0 && cam.audioRadius) {
         hasMics = true;
         let dist = Math.hypot(px - cam.x, py - cam.y);
         if (dist <= cam.audioRadius) covered = true;
@@ -1567,7 +1688,7 @@ function checkMicCoverage(px, py) {
 
     // Check extra mics
     extraMics.forEach(m => {
-        let r = parseAudio(m.pickup_radius) || 0;
+        let r = m.radius || 0;
         if (r > 0) {
             hasMics = true;
             let dist = Math.hypot(px - m.x, py - m.y);
@@ -1608,16 +1729,22 @@ function updateChairsAndDraw() {
     const micPct = chairs.length > 0 ? Math.round((insideMicCount / chairs.length) * 100) : 0;
 
     const circ = 169.6;
+    let hasCams = selectedCamIdx >= 0 || (multiCamEnabled && extraCams.length > 0);
     
     // Update Camera Ring
     const camRing = document.getElementById('camCoverageRing');
     const camLabel = document.getElementById('camRingLabel');
     if (camRing && camLabel) {
-        camLabel.innerText = `${camPct}%`;
-        camRing.style.strokeDashoffset = circ * (1 - camPct / 100);
-        if (camPct === 100) camRing.style.stroke = '#10b981';
-        else if (camPct >= 60) camRing.style.stroke = '#0ea5e9';
-        else camRing.style.stroke = '#ef4444';
+        if (!hasCams) {
+            camLabel.innerHTML = `<span style="color: var(--text-muted);">-</span>`;
+            camRing.style.strokeDashoffset = circ;
+        } else {
+            camLabel.innerText = `${camPct}%`;
+            camRing.style.strokeDashoffset = circ * (1 - camPct / 100);
+            if (camPct === 100) camRing.style.stroke = '#10b981';
+            else if (camPct >= 60) camRing.style.stroke = '#0ea5e9';
+            else camRing.style.stroke = '#ef4444';
+        }
     }
 
     // Update Mic Ring
@@ -2303,7 +2430,9 @@ function drawSingleCamFOV(c) {
 }
 
 function drawFOV() {
-    drawSingleCamFOV(cam);
+    if (selectedCamIdx >= 0) {
+        drawSingleCamFOV(cam);
+    }
     if (multiCamEnabled) {
         extraCams.forEach(ec => drawSingleCamFOV(ec));
     }
@@ -2566,15 +2695,19 @@ function drawSingleCamera(c, label) {
 }
 
 function drawCamera() {
-    drawSingleCamera(cam, "1");
-    if (selectedObject === 'cam') {
-        drawCamHandle(cam);
+    if (selectedCamIdx >= 0) {
+        drawSingleCamera(cam, "1");
+        if (selectedObject === 'cam') {
+            drawSelectionHighlight(cam);
+            drawRotKnob(cam);
+        }
     }
     if (multiCamEnabled) {
         extraCams.forEach((ec, idx) => {
             drawSingleCamera(ec, (idx + 2).toString());
             if (selectedObject && selectedObject.type === 'extraCam' && selectedObject.id === ec.id) {
-                drawCamHandle(ec);
+                drawSelectionHighlight(ec);
+                drawRotKnob(ec);
             }
         });
     }
@@ -2676,3 +2809,219 @@ function drawSelectionHighlight(c) {
 
 // Load devices and initialize
 loadDevices();
+
+/* ─── DIAGRAM VIEW ─── */
+
+let diagramImageBase64 = null;
+
+function setupNavigation() {
+    const navBtns = document.querySelectorAll(".nav-btn[data-view]");
+    navBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const view = btn.getAttribute("data-view");
+            if(view === "export") return;
+            
+            navBtns.forEach(b => {
+                if(b.getAttribute("data-view") !== "export") b.classList.remove("active");
+            });
+            btn.classList.add("active");
+
+            const canvasContainer = document.getElementById("canvasContainer");
+            const topologyView = document.getElementById("topologyView");
+            const panelsWrap = document.querySelector(".right-panels-wrap");
+            const statsPanel = document.getElementById("statsPanel");
+            const canvasControls = document.querySelector(".canvas-controls");
+
+            const fovTogglesWrap = document.getElementById("fovTogglesWrap");
+            const zoomDisplay = document.getElementById("zoomDisplay");
+
+            if (view === "canvas") {
+                canvasContainer.style.display = "";
+                topologyView.style.display = "none";
+                panelsWrap.classList.remove("slide-out");
+                statsPanel.classList.remove("slide-out");
+                if (canvasControls) canvasControls.classList.remove("slide-out");
+                if(fovTogglesWrap) fovTogglesWrap.style.display = "flex";
+                if(zoomDisplay) zoomDisplay.innerText = Math.round(scale * 100) + '%';
+                // Re-measure and redraw after the container becomes visible again
+                // (needed after browser zoom changes while on another tab)
+                requestAnimationFrame(() => { resizeCanvas(); });
+            } else if (view === "topology") {
+                canvasContainer.style.display = "none";
+                topologyView.style.display = "block";
+                panelsWrap.classList.add("slide-out");
+                statsPanel.classList.add("slide-out");
+                if (canvasControls) canvasControls.classList.add("slide-out");
+                if(fovTogglesWrap) fovTogglesWrap.style.display = "none";
+                if(zoomDisplay) zoomDisplay.innerText = '100%';
+                
+                // Restore custom prompt if available, otherwise auto-generate
+                const textarea = document.getElementById('deviceListTextarea');
+                const pending = StateManager._pendingCustomPrompt;
+                if (pending !== undefined) {
+                    if (textarea) textarea.value = pending;
+                    StateManager._pendingCustomPrompt = undefined;
+                } else if (!textarea || !textarea.value.trim()) {
+                    generateDeviceListForAI();
+                }
+                renderDiagramImage();
+            }
+        });
+    });
+}
+setupNavigation();
+
+let genericDeviceCounts = {};
+
+function generateDeviceListForAI() {
+    let list = "Please create a Mermaid diagram (graph TD) connecting the following A/V equipment in our conference room. Ensure logical connections between the devices.\n\nרשימת ציוד בחדר:\n";
+    
+    const formatGroup = (title, itemsArray) => {
+        if (!itemsArray || itemsArray.length === 0) return "";
+        let counts = {};
+        itemsArray.forEach(item => {
+            const name = typeof item === 'string' ? item : (item.name || item.deviceName);
+            if (!name) return;
+            counts[name] = (counts[name] || 0) + 1;
+        });
+        
+        const keys = Object.keys(counts);
+        if (keys.length === 0) return "";
+        
+        let res = `\n${title}:\n`;
+        for (const [name, count] of Object.entries(counts)) {
+            res += `- ${name}${count > 1 ? ' x' + count : ''}\n`;
+        }
+        return res;
+    };
+    
+    let mainCams = [];
+    if(typeof cameras !== 'undefined' && cameras[selectedCamIdx]) {
+        mainCams.push(cameras[selectedCamIdx].name);
+    }
+    list += formatGroup("מצלמה ראשית", mainCams);
+    list += formatGroup("מצלמות נוספות", multiCamEnabled ? extraCams : []);
+    list += formatGroup("מיקרופונים", extraMics);
+    list += formatGroup("רמקולים", extraSpeakers);
+    list += formatGroup("מסכים", extraDisplays);
+    list += formatGroup("ציוד נוסף", extraOthers);
+    
+    let generics = [];
+    for (const [name, count] of Object.entries(genericDeviceCounts)) {
+        for(let i=0; i<count; i++) generics.push(name);
+    }
+    list += formatGroup("ציוד גנרי שהוסף", generics);
+    
+    const textarea = document.getElementById('deviceListTextarea');
+    if(textarea) textarea.value = list.trim();
+}
+
+function renderDiagramImage() {
+    const preview = document.getElementById('diagramImagePreview');
+    const placeholder = document.getElementById('diagramPastePlaceholder');
+    const clearBtn = document.getElementById('clearDiagramBtn');
+    
+    if (diagramImageBase64) {
+        preview.src = diagramImageBase64;
+        preview.style.display = 'block';
+        placeholder.style.display = 'none';
+        clearBtn.style.display = 'block';
+    } else {
+        preview.src = '';
+        preview.style.display = 'none';
+        placeholder.style.display = 'block';
+        clearBtn.style.display = 'none';
+    }
+}
+
+function setupDiagramPaste() {
+    const pasteArea = document.getElementById('diagramPasteArea');
+    const clearBtn = document.getElementById('clearDiagramBtn');
+    const copyBtn = document.getElementById('copyDeviceListBtn');
+    const textarea = document.getElementById('deviceListTextarea');
+    
+    if (!pasteArea) return;
+    
+    // Handle paste event anywhere in the paste area
+    pasteArea.addEventListener('paste', (e) => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    diagramImageBase64 = event.target.result;
+                    renderDiagramImage();
+                    StateManager.saveCurrentState();
+                };
+                reader.readAsDataURL(blob);
+                break;
+            }
+        }
+    });
+    
+    // Also allow clicking to upload a file as fallback
+    pasteArea.addEventListener('click', (e) => {
+        if (e.target === clearBtn || diagramImageBase64) return;
+        
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (ev) => {
+            const file = ev.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    diagramImageBase64 = event.target.result;
+                    renderDiagramImage();
+                    StateManager.saveCurrentState();
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    });
+    
+    // Clear image
+    if (clearBtn) {
+        clearBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            diagramImageBase64 = null;
+            renderDiagramImage();
+            StateManager.saveCurrentState();
+        });
+    }
+    
+    // Copy Device List
+    if (copyBtn && textarea) {
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> הועתק בהצלחה!';
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                }, 2000);
+            });
+        });
+    }
+    
+    // Add generic devices buttons
+    document.querySelectorAll('.add-generic-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const type = e.target.getAttribute('data-type');
+            genericDeviceCounts[type] = (genericDeviceCounts[type] || 0) + 1;
+            generateDeviceListForAI();
+            // Persist immediately — input event won't fire on programmatic .value changes
+            StateManager.saveCurrentState(true);
+        });
+    });
+
+    // Save textarea edits immediately so they are persisted
+    if (textarea) {
+        textarea.addEventListener('input', () => {
+            StateManager.saveCurrentState(true);
+        });
+    }
+}
+setupDiagramPaste();
+
