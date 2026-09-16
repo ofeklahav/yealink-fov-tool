@@ -136,7 +136,7 @@ body {
     width: 24px; height: 24px; border-radius: 6px;
     display: flex; align-items: center; justify-content: center;
     color: var(--text-3);
-    cursor: help;
+    cursor: default;
 }
 
 .cam-dropdown.open .cam-dd-trigger {
@@ -538,12 +538,34 @@ canvas {
     width: 32px; height: 32px; border-radius: 6px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: background 0.15s, color 0.15s;
+    outline: none;
 }
 
 .canvas-controls button:hover { background: var(--surface-3); color: var(--text-1); }
 .canvas-controls span {
     font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--text-1);
     min-width: 48px; text-align: center; user-select: none;
+}
+.mermaid-dir-wrap {
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-width 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+    margin-left: 0;
+    display: flex;
+    align-items: center;
+}
+.mermaid-dir-wrap.visible {
+    max-width: 100px;
+    opacity: 1;
+    margin-left: 4px;
+}
+.canvas-controls-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-med);
+    margin: 0 6px;
+    flex-shrink: 0;
 }
 
 /* ─── RIGHT PANELS WRAP ─── */
@@ -585,10 +607,10 @@ canvas {
     position: fixed !important;
     top: calc(var(--topbar-h) + var(--toolbar-h) + 16px + 14px);
     right: 24px !important;
-    width: 30px !important;
-    height: 30px !important;
+    width: 28px !important;
+    height: 28px !important;
     background: var(--surface) !important;
-    border: 1px solid var(--border-med) !important;
+    border: none !important;
     border-radius: 6px !important;
     color: var(--text-2) !important;
     z-index: 200 !important;
@@ -624,11 +646,11 @@ canvas {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     background: transparent;
-    border: 1px solid var(--border-med);
-    border-radius: 8px;
+    border: none;
+    border-radius: 6px;
     color: var(--text-2);
     cursor: pointer;
     flex-shrink: 0;
@@ -637,7 +659,6 @@ canvas {
 .sidebar-panel-header #collapseSidebarInnerBtn:hover {
     background: var(--surface-3);
     color: var(--text-1);
-    border-color: var(--border-high);
 }
 .sidebar-panel-title {
     font-size: 16px;
@@ -650,6 +671,7 @@ canvas {
 .sidebar-scroll {
     flex: 1; overflow-y: auto; overflow-x: hidden;
     scrollbar-width: none;
+    min-height: 0;
 }
 .sidebar-scroll::-webkit-scrollbar { display: none; }
 
@@ -659,8 +681,15 @@ canvas {
 }
 
 /* ─── TOPOLOGY PANELS ─── */
-.topology-panel-col {
+.topology-panel-col, 
+.topology-panel-col textarea {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+.topology-panel-col::-webkit-scrollbar,
+.topology-panel-col textarea::-webkit-scrollbar {
+    display: none;
 }
 
 .topology-panel-col.collapsed-right {
@@ -677,28 +706,27 @@ canvas {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     background: transparent;
-    border: 1px solid var(--border-med);
-    border-radius: 8px;
+    border: none;
+    border-radius: 6px;
     color: var(--text-2);
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    transition: background 0.15s, color 0.15s;
 }
 .topology-panel-collapse-btn:hover {
     background: var(--surface-3);
     color: var(--text-1);
-    border-color: var(--border-high);
 }
 
 .topology-panel-uncollapse-btn {
     position: absolute;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     background: var(--surface);
-    border: 1px solid var(--border-med);
+    border: none;
     border-radius: 6px;
     color: var(--text-2);
     display: none;
@@ -1127,13 +1155,199 @@ input:checked + .slider.round:before {
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.15s, box-shadow 0.15s;
     outline: none;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
 }
 
-.modal-ok-btn:hover {
-    background: #888888;
-    box-shadow: 0 2px 8px rgba(163,163,163,0.3);
+.modal-ok-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #000;
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0.2s;
+}
+
+.modal-ok-btn:hover::before {
+    opacity: 0.15;
+}
+
+/* ─── EXPORT MODAL ─── */
+.export-modal-box {
+    width: 800px;
+    max-width: 90vw;
+}
+.export-modal-body {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    flex-direction: row;
+    text-align: right;
+}
+.export-options {
+    flex: 0 0 280px;
+}
+.export-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--text);
+}
+.export-format-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.export-format-card {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface-2);
+}
+.export-format-card input[type="radio"] {
+    margin-left: 12px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+}
+.export-format-card:has(input:checked) {
+    border-color: var(--primary);
+}
+.export-format-name {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+}
+.export-format-desc {
+    display: block;
+    font-size: 12px;
+    color: var(--text-2);
+}
+.export-bg-options {
+    display: flex;
+    gap: 8px;
+}
+.export-bg-option {
+    cursor: pointer;
+    position: relative;
+}
+.export-bg-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+.export-bg-swatch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--border-high);
+    transition: all 0.2s;
+}
+.export-bg-option input:checked + .export-bg-swatch {
+    border: 2px solid var(--primary);
+    transform: scale(1.05);
+}
+.bg-transparent {
+    background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%);
+    background-size: 10px 10px;
+    background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+    background-color: white;
+}
+.bg-white { background: #ffffff; }
+.bg-dark { background: #1e1e1e; }
+.bg-custom { background: #f0f0f0; color: #333; }
+
+.export-preview-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.export-preview-box {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    position: relative;
+    min-height: 300px;
+    overflow: hidden;
+}
+.export-copy-btn {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 32px;
+    height: 32px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-med);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    z-index: 5;
+    transition: all 0.2s;
+}
+.export-copy-btn:hover {
+    background: var(--surface-3);
+    color: var(--text-1);
+}
+.export-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-med);
+}
+.export-share-hint {
+    font-size: 13px;
+    color: var(--text-2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ─── SHARE BUTTON ─── */
+#shareTopBtn {
+    background: var(--primary);
+    color: white;
+    border: 1px solid var(--primary);
+    padding: 4px 12px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 13px;
+    font-family: var(--font);
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+#shareTopBtn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #000;
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0.2s;
+}
+
+#shareTopBtn:hover::before {
+    opacity: 0.15;
 }
 
 /* ─── NAVIGATION & THEME ─── */
@@ -1401,3 +1615,13 @@ details[open] .acc-content {
     transform: translateX(100%);
 }
 
+/* Sandbox Mode Overrides */
+body.sandbox-mode #projectNameDisplayWrap {
+    pointer-events: none !important;
+}
+body.sandbox-mode #projectNameDisplayWrap svg {
+    display: none !important;
+}
+body.sandbox-mode button[data-view="export"] {
+    display: none !important;
+}
