@@ -283,11 +283,13 @@ class StateManager {
             localStorage.removeItem('av_planner_current_id');
         }
     }
-    static createProject(name) {
+    static createProject(details) {
+        const name = details.name || 'פרויקט חדש';
         const projects = this.getProjects();
         const newProject = {
             id: Date.now().toString(),
             name: name,
+            clientDetails: details,
             createdAt: new Date().toISOString(),
             room: {
                 w: 4.8,
@@ -1033,6 +1035,9 @@ function showAppBody() {
 
     syncUIWithState();
     centerRoom();
+    
+    // Make sure mermaid diagram is rendered in the background for exports
+    renderDiagramImage();
 }
 
 
@@ -1096,18 +1101,16 @@ function syncUIWithState() {
 
 function renderDashboard() {
     const grid = document.getElementById('projectGrid');
-    const cards = grid.querySelectorAll('.project-card:not(#newProjectBtn)');
+    const cards = grid.querySelectorAll('.project-card:not(#newProjectBtn):not(#sandboxBtn)');
     cards.forEach(c => c.remove());
 
-    const projects = StateManager.getProjects();
+    const projects = StateManager.getProjects().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     projects.forEach(p => {
         const card = document.createElement('div');
         card.className = 'project-card';
         card.innerHTML = `
             <div>
                 <div class="pc-title">${p.name}</div>
-                <div class="pc-meta">נוצר: ${new Date(p.createdAt).toLocaleDateString('he-IL')}</div>
-                <div class="pc-meta" style="margin-top:4px;">חדר: ${p.room.w}x${p.room.h} מ׳</div>
             </div>
         `;
         card.addEventListener('click', () => {
@@ -1164,13 +1167,54 @@ function init() {
     });
 
     document.getElementById('navDashboardBtn').addEventListener('click', () => {
+        document.body.classList.remove('sandbox-mode');
         StateManager.setCurrentProjectId(null);
         showDashboard();
     });
 
     document.getElementById('newProjectBtn').addEventListener('click', () => {
-        document.getElementById('newProjectName').value = '';
+        ['FullName', 'Phone', 'ClientType', 'OrgName', 'RefReseller', 'ApplyingCompany', 'FinalCustomer', 'IntegratorRef', 'Name'].forEach(id => {
+            const el = document.getElementById('newProject' + id);
+            if(el) el.value = '';
+        });
+        const dateEl = document.getElementById('newProjectDate');
+        if (dateEl) dateEl.value = '';
+        
+        const clientTypeEl = document.getElementById('newProjectClientType');
+        if (clientTypeEl) {
+            clientTypeEl.dispatchEvent(new Event('change'));
+        }
+        
+        document.querySelectorAll('.new-project-end-customer-field, .new-project-reseller-field, .new-project-integrator-field').forEach(el => el.style.display = 'none');
         document.getElementById('newProjectModal').classList.add('open');
+    });
+
+    document.getElementById('sandboxBtn').addEventListener('click', () => {
+        room = { w: 4.8, h: 5.4 };
+        table = { x: 2.4, y: 3.0, w: 1.4, h: 2.4 };
+        tableShape = 'rectangular';
+        cam = { x: 2.4, y: 0.1, rot: 90, hfov: 110, dofMax: null, audioRadius: null };
+        selectedCamIdx = -1;
+        selectedLensIdx = 0;
+        multiCamEnabled = false;
+        multiCamGroup = 'avhub';
+        extraCams = [];
+        extraMics = [];
+        extraSpeakers = [];
+        extraDisplays = [];
+        extraOthers = [];
+        diagramMermaidCode = null;
+        genericDeviceCounts = {};
+
+        undoStack = [];
+        redoStack = [];
+
+        StateManager.setCurrentProjectId('sandbox');
+        document.getElementById('projectNameDisplay').textContent = 'סביבת בדיקות';
+        document.body.classList.add('sandbox-mode');
+        
+        showAppBody();
+        drawCanvas();
     });
 
     document.getElementById('closeNewProjectBtn').addEventListener('click', () => {
@@ -1225,9 +1269,98 @@ function init() {
         });
     });
 
+
+    function setupClientFieldsLogic(prefix) {
+        const typeSelect = document.getElementById(prefix + 'ClientType');
+        if (!typeSelect) return;
+        const nameInput = document.getElementById(prefix + 'Name') || document.getElementById(prefix + 'NameInput');
+        const orgName = document.getElementById(prefix + 'OrgName');
+        const applyingCompany = document.getElementById(prefix + 'ApplyingCompany');
+        const finalCustomer = document.getElementById(prefix + 'FinalCustomer');
+
+        function updateVisibilityAndName() {
+            const val = typeSelect.value;
+            document.querySelectorAll('.' + (prefix === 'newProject' ? 'new-project' : 'rename-project') + '-end-customer-field').forEach(el => el.style.display = val === 'endCustomer' ? 'block' : 'none');
+            document.querySelectorAll('.' + (prefix === 'newProject' ? 'new-project' : 'rename-project') + '-reseller-field').forEach(el => el.style.display = (val === 'resellerOrIntegrator') ? 'block' : 'none');
+            
+            let genName = '';
+            if (val === 'endCustomer') {
+                genName = orgName.value.trim();
+            } else if (val === 'resellerOrIntegrator') {
+                const comp = applyingCompany.value.trim();
+                const cust = finalCustomer.value.trim();
+                if (comp || cust) {
+                    genName = (comp ? comp : '') + (comp && cust ? ' / ' : '') + (cust ? cust : '');
+                }
+            }
+            if (nameInput) {
+                nameInput.value = genName;
+            }
+        }
+
+        typeSelect.addEventListener('change', updateVisibilityAndName);
+        const btnGroup = document.getElementById(prefix + 'ClientTypeBtnGroup');
+        if (btnGroup) {
+            const btns = btnGroup.querySelectorAll('.client-type-btn');
+            btns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Update hidden input
+                    typeSelect.value = btn.getAttribute('data-value');
+                    
+                    // Update button styles
+                    btns.forEach(b => {
+                        b.style.background = 'var(--surface-2)';
+                        b.style.color = 'var(--text)';
+                        b.style.borderColor = 'var(--border-med)';
+                    });
+                    btn.style.background = 'var(--primary)';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = 'var(--primary)';
+                    
+                    // Trigger change event
+                    const evt = new Event('change');
+                    typeSelect.dispatchEvent(evt);
+                });
+            });
+            
+            // Listen to typeSelect change to update buttons programmatically (e.g. on rename modal load)
+            typeSelect.addEventListener('change', () => {
+                const val = typeSelect.value;
+                btns.forEach(b => {
+                    if (b.getAttribute('data-value') === val) {
+                        b.style.background = 'var(--primary)';
+                        b.style.color = 'white';
+                        b.style.borderColor = 'var(--primary)';
+                    } else {
+                        b.style.background = 'var(--surface-2)';
+                        b.style.color = 'var(--text)';
+                        b.style.borderColor = 'var(--border-med)';
+                    }
+                });
+            });
+        }
+
+        orgName.addEventListener('input', updateVisibilityAndName);
+        applyingCompany.addEventListener('input', updateVisibilityAndName);
+        finalCustomer.addEventListener('input', updateVisibilityAndName);
+    }
+    setupClientFieldsLogic('newProject');
+    setupClientFieldsLogic('renameProject');
+
     document.getElementById('createNewProjectOkBtn').addEventListener('click', () => {
-        const name = document.getElementById('newProjectName').value.trim() || 'פרויקט חדש';
-        const p = StateManager.createProject(name);
+        const details = {
+            fullName: document.getElementById('newProjectFullName').value.trim(),
+            inquiryDate: document.getElementById('newProjectDate').value,
+            phone: document.getElementById('newProjectPhone').value.trim(),
+            clientType: document.getElementById('newProjectClientType').value,
+            orgName: document.getElementById('newProjectOrgName').value.trim(),
+            refReseller: document.getElementById('newProjectRefReseller').value.trim(),
+            applyingCompany: document.getElementById('newProjectApplyingCompany').value.trim(),
+            finalCustomer: document.getElementById('newProjectFinalCustomer').value.trim(),
+            integratorRef: document.getElementById('newProjectIntegratorRef').value.trim(),
+            name: document.getElementById('newProjectName').value.trim() || 'פרויקט חדש'
+        };
+        const p = StateManager.createProject(details);
         StateManager.loadProject(p.id);
         document.getElementById('newProjectModal').classList.remove('open');
         showAppBody();
@@ -1301,7 +1434,26 @@ function init() {
                 const projects = StateManager.getProjects();
                 const p = projects.find(p => p.id === currentId);
                 if (p) {
-                    renameProjectNameInput.value = p.name;
+                    renameProjectNameInput.value = p.name || '';
+                    if (p.clientDetails) {
+                        document.getElementById('renameProjectFullName').value = p.clientDetails.fullName || '';
+                        document.getElementById('renameProjectDate').value = p.clientDetails.inquiryDate || '';
+                        document.getElementById('renameProjectPhone').value = p.clientDetails.phone || '';
+                        document.getElementById('renameProjectClientType').value = p.clientDetails.clientType || '';
+                        document.getElementById('renameProjectOrgName').value = p.clientDetails.orgName || '';
+                        document.getElementById('renameProjectRefReseller').value = p.clientDetails.refReseller || '';
+                        document.getElementById('renameProjectApplyingCompany').value = p.clientDetails.applyingCompany || '';
+                        document.getElementById('renameProjectFinalCustomer').value = p.clientDetails.finalCustomer || '';
+                        document.getElementById('renameProjectIntegratorRef').value = p.clientDetails.integratorRef || '';
+                    } else {
+                        ['FullName', 'Phone', 'ClientType', 'OrgName', 'RefReseller', 'ApplyingCompany', 'FinalCustomer', 'IntegratorRef'].forEach(id => {
+                            const el = document.getElementById('renameProject' + id);
+                            if(el) el.value = '';
+                        });
+                    }
+                    const evt = new Event('change');
+                    document.getElementById('renameProjectClientType').dispatchEvent(evt);
+                    
                     renameProjectModal.classList.add('open');
                 }
             }
@@ -1318,6 +1470,18 @@ function init() {
                 const p = projects.find(p => p.id === currentId);
                 if (p) {
                     p.name = renameProjectNameInput.value.trim() || 'פרויקט ללא שם';
+                    p.clientDetails = {
+                        fullName: document.getElementById('renameProjectFullName').value.trim(),
+                        inquiryDate: document.getElementById('renameProjectDate').value,
+                        phone: document.getElementById('renameProjectPhone').value.trim(),
+                        clientType: document.getElementById('renameProjectClientType').value,
+                        orgName: document.getElementById('renameProjectOrgName').value.trim(),
+                        refReseller: document.getElementById('renameProjectRefReseller').value.trim(),
+                        applyingCompany: document.getElementById('renameProjectApplyingCompany').value.trim(),
+                        finalCustomer: document.getElementById('renameProjectFinalCustomer').value.trim(),
+                        integratorRef: document.getElementById('renameProjectIntegratorRef').value.trim(),
+                        name: p.name
+                    };
                     StateManager.saveProjects(projects);
                     if (projectNameDisplay) projectNameDisplay.textContent = p.name;
                     renameProjectModal.classList.remove('open');
@@ -1597,8 +1761,211 @@ function init() {
 
     // Resize Handling
     window.addEventListener('resize', resizeCanvas);
+
+    // Initial draw
     resizeCanvas();
-    centerRoom();
+    drawGrid();
+
+    // Export Modal Logic
+    const btnDownloadDiagram = document.getElementById('btnDownloadDiagram');
+    const exportModal = document.getElementById('exportModal');
+    const closeExportModalBtn = document.getElementById('closeExportModalBtn');
+    const exportCancelBtn = document.getElementById('exportCancelBtn');
+    const exportConfirmBtn = document.getElementById('exportConfirmBtn');
+    const exportPreviewContent = document.getElementById('exportPreviewContent');
+    const exportPreviewBox = document.getElementById('exportPreviewBox');
+    const exportCopyBtn = document.getElementById('exportCopyBtn');
+    const bgOptions = document.querySelectorAll('input[name="exportBg"]');
+    const formatOptions = document.querySelectorAll('input[name="exportFormat"]');
+    const customColorPicker = document.getElementById('exportCustomColor');
+
+    function syncExportPreview() {
+        const svgSource = document.querySelector('#mermaidOutput svg');
+        exportPreviewContent.innerHTML = '';
+        if (svgSource) {
+            const clone = svgSource.cloneNode(true);
+            clone.style.width = '100%';
+            clone.style.height = '100%';
+            clone.style.maxWidth = '100%';
+            clone.style.maxHeight = '100%';
+            exportPreviewContent.appendChild(clone);
+        }
+    }
+
+    function updatePreviewBg() {
+        if(!exportPreviewBox) return;
+        const checkedBg = document.querySelector('input[name="exportBg"]:checked');
+        if(!checkedBg) return;
+        let selectedBg = checkedBg.value;
+        if (selectedBg === 'custom') {
+            selectedBg = customColorPicker.value;
+        }
+        exportPreviewBox.style.background = selectedBg === 'transparent' ? '' : selectedBg;
+        if(selectedBg === 'transparent') {
+            exportPreviewBox.classList.add('bg-transparent');
+        } else {
+            exportPreviewBox.classList.remove('bg-transparent');
+        }
+    }
+
+    if (btnDownloadDiagram) {
+        btnDownloadDiagram.addEventListener('click', (e) => {
+            e.stopPropagation();
+            syncExportPreview();
+            updatePreviewBg();
+            exportModal.classList.add('open');
+        });
+    }
+
+    function closeExportModal() {
+        if(exportModal) exportModal.classList.remove('open');
+    }
+
+    if (closeExportModalBtn) closeExportModalBtn.addEventListener('click', closeExportModal);
+    if (exportCancelBtn) exportCancelBtn.addEventListener('click', closeExportModal);
+
+    bgOptions.forEach(opt => {
+        opt.addEventListener('change', updatePreviewBg);
+    });
+    if (customColorPicker) {
+        customColorPicker.addEventListener('input', () => {
+            const customRadio = document.querySelector('input[name="exportBg"][value="custom"]');
+            if(customRadio) customRadio.checked = true;
+            updatePreviewBg();
+        });
+    }
+
+    async function getCanvasFromSvg(svgElement, bg) {
+        return new Promise((resolve, reject) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const svgData = new XMLSerializer().serializeToString(svgElement);
+            
+            let width = parseInt(svgElement.getAttribute('width'));
+            let height = parseInt(svgElement.getAttribute('height'));
+            if (!width || !height) {
+                const box = svgElement.viewBox.baseVal;
+                if(box && box.width && box.height) {
+                    width = box.width;
+                    height = box.height;
+                } else {
+                    const rect = svgElement.getBoundingClientRect();
+                    width = rect.width || 800;
+                    height = rect.height || 600;
+                }
+            }
+
+            const scale = 3;
+            canvas.width = width * scale;
+            canvas.height = height * scale;
+
+            if (bg && bg !== 'transparent') {
+                ctx.fillStyle = bg;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            const img = new Image();
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas);
+            };
+            img.onerror = reject;
+            const b64 = btoa(unescape(encodeURIComponent(svgData)));
+            img.src = 'data:image/svg+xml;base64,' + b64;
+        });
+    }
+
+    if (exportConfirmBtn) {
+        exportConfirmBtn.addEventListener('click', async () => {
+            const formatRadio = document.querySelector('input[name="exportFormat"]:checked');
+            if(!formatRadio) return;
+            const format = formatRadio.value;
+            let bg = document.querySelector('input[name="exportBg"]:checked').value;
+            if (bg === 'custom') bg = customColorPicker.value;
+
+            const svgElement = exportPreviewContent.querySelector('svg');
+            if (!svgElement) {
+                showAlert('No diagram to export.');
+                return;
+            }
+
+            try {
+                if (format === 'svg') {
+                    const clone = svgElement.cloneNode(true);
+                    if(bg !== 'transparent') {
+                        clone.style.background = bg;
+                    }
+                    const svgData = new XMLSerializer().serializeToString(clone);
+                    const blob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'diagram.svg';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                } else if (format === 'png') {
+                    const canvas = await getCanvasFromSvg(svgElement, bg);
+                    const url = canvas.toDataURL('image/png');
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'diagram.png';
+                    a.click();
+                } else if (format === 'pdf') {
+                    if (!window.jspdf) {
+                        showAlert('jsPDF library not loaded.');
+                        return;
+                    }
+                    const canvas = await getCanvasFromSvg(svgElement, bg);
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    const pdf = new window.jspdf.jsPDF({
+                        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+                        unit: 'px',
+                        format: [canvas.width, canvas.height]
+                    });
+                    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                    pdf.save('diagram.pdf');
+                }
+                closeExportModal();
+            } catch (err) {
+                console.error(err);
+                showAlert('Export failed: ' + err.message);
+            }
+        });
+    }
+
+    if (exportCopyBtn) {
+        exportCopyBtn.addEventListener('click', async () => {
+            const svgElement = exportPreviewContent.querySelector('svg');
+            if (!svgElement) return;
+
+            const originalBtnHtml = exportCopyBtn.innerHTML;
+            exportCopyBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';
+            
+            try {
+                let bg = document.querySelector('input[name="exportBg"]:checked').value;
+                if (bg === 'custom') bg = customColorPicker.value;
+                const canvas = await getCanvasFromSvg(svgElement, bg);
+                
+                canvas.toBlob(async (blob) => {
+                    try {
+                        await navigator.clipboard.write([
+                            new ClipboardItem({ 'image/png': blob })
+                        ]);
+                    } catch (e) {
+                        console.error('Clipboard API failed', e);
+                        showAlert('Failed to copy to clipboard (check browser permissions)');
+                    }
+                }, 'image/png');
+            } catch (err) {
+                console.error(err);
+            }
+
+            setTimeout(() => {
+                exportCopyBtn.innerHTML = originalBtnHtml;
+            }, 2000);
+        });
+    }
 
     // Mouse/Touch Events
     canvas.addEventListener('pointerdown', onPointerDown);
@@ -1631,6 +1998,14 @@ function init() {
             }
             if (document.getElementById('legendModal') && document.getElementById('legendModal').classList.contains('open')) {
                 document.getElementById('legendModal').classList.remove('open');
+                return;
+            }
+            if (document.getElementById('exportModal') && document.getElementById('exportModal').classList.contains('open')) {
+                document.getElementById('exportModal').classList.remove('open');
+                return;
+            }
+            if (document.getElementById('shareEmailModal') && document.getElementById('shareEmailModal').classList.contains('open')) {
+                document.getElementById('shareEmailModal').classList.remove('open');
                 return;
             }
         }
@@ -2400,7 +2775,7 @@ function onPointerMove(e) {
             let angleDeg = Math.round(angleRad * 180 / Math.PI + 45);
             angleDeg = (angleDeg % 360 + 360) % 360;
 
-            const snapThreshold = 12;
+            const snapThreshold = 4;
             for (let snap of [0, 90, 180, 270, 360]) {
                 if (Math.abs(angleDeg - snap) <= snapThreshold || Math.abs(angleDeg - snap) >= 360 - snapThreshold) {
                     angleDeg = snap % 360;
@@ -2414,7 +2789,6 @@ function onPointerMove(e) {
                 document.getElementById('camRotation').value = angleDeg;
                 document.getElementById('rotVal').value = angleDeg;
                 cam.rot = angleDeg;
-                updateCamProps();
             } else if (dragTarget.target.type === 'extraCam') {
                 const sldr = document.getElementById('ecSldr_' + targetDev.id);
                 const pill = document.getElementById('ecPill_' + targetDev.id);
@@ -3383,6 +3757,8 @@ function setupNavigation() {
                 if (panelsWrap) panelsWrap.classList.remove("slide-out");
                 if (statsPanel) statsPanel.classList.remove("slide-out");
                 if (canvasControls) {
+                    const btnWrap = document.getElementById('mermaidDirBtnWrapper');
+                    if (btnWrap) btnWrap.classList.remove('visible');
                     canvasControls.classList.remove("slide-out");
                     canvasControls.classList.remove("topology-controls");
                 }
@@ -3405,6 +3781,12 @@ function setupNavigation() {
                 if (canvasControls) {
                     canvasControls.classList.remove("slide-out"); // keep zoom controls visible
                     canvasControls.classList.add("topology-controls"); // center them over diagram
+                    setTimeout(() => {
+                        if (document.getElementById('topologyView').style.display === 'block') {
+                            const btnWrap = document.getElementById('mermaidDirBtnWrapper');
+                            if (btnWrap) btnWrap.classList.add('visible');
+                        }
+                    }, 300); // Wait for transition
                 }
                 if (fovTogglesWrap) fovTogglesWrap.style.display = "none";
                 if (zoomDisplay) zoomDisplay.innerText = Math.round(diagramScale * 100) + '%';
@@ -3483,6 +3865,7 @@ async function renderDiagramImage() {
     
     if (input && diagramMermaidCode !== input.value && document.activeElement !== input) {
         input.value = diagramMermaidCode || '';
+        if(window.syncMermaidDirIcon) window.syncMermaidDirIcon();
     }
 
     if (!diagramMermaidCode || !diagramMermaidCode.trim()) {
@@ -3521,10 +3904,54 @@ function setupDiagramPaste() {
     if (inputArea) {
         inputArea.addEventListener('input', (e) => {
             diagramMermaidCode = e.target.value;
+            if(window.syncMermaidDirIcon) window.syncMermaidDirIcon();
             renderDiagramImage();
             StateManager.saveCurrentState();
         });
     }
+
+    window.syncMermaidDirIcon = function() {
+        if (!inputArea) return;
+        const code = inputArea.value;
+        const isTD = /^(graph|flowchart)\s+TD/i.test(code.trim());
+        const iconDir = document.getElementById('iconDir');
+        if (iconDir) {
+            if (isTD) {
+                iconDir.style.transform = 'rotate(90deg)';
+            } else {
+                iconDir.style.transform = 'rotate(0deg)';
+            }
+        }
+    };
+
+    const btnMermaidDir = document.getElementById('btnMermaidDir');
+    if (btnMermaidDir) {
+        btnMermaidDir.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!inputArea) return;
+            let code = inputArea.value.trim();
+            if (!code) {
+                code = 'graph TD';
+            } else if (/^(graph|flowchart)\s+TD/i.test(code)) {
+                code = code.replace(/^(graph|flowchart)\s+TD/i, '$1 LR');
+            } else if (/^(graph|flowchart)\s+LR/i.test(code)) {
+                code = code.replace(/^(graph|flowchart)\s+LR/i, '$1 TD');
+            } else if (/^(graph|flowchart)/i.test(code)) {
+                code = code.replace(/^(graph|flowchart)/i, '$1 TD');
+            } else {
+                code = 'graph TD\n' + code;
+            }
+            
+            inputArea.value = code;
+            diagramMermaidCode = code;
+            if(window.syncMermaidDirIcon) window.syncMermaidDirIcon();
+            renderDiagramImage();
+            StateManager.saveCurrentState();
+        });
+    }
+
+    // Call it initially
+    if(window.syncMermaidDirIcon) window.syncMermaidDirIcon();
 
     // Clear diagram
     if (clearBtn) {
@@ -3545,6 +3972,7 @@ function setupDiagramPaste() {
         let currentMatchIndex = 0;
 
         outputArea.addEventListener('click', (e) => {
+            if (e.target.isContentEditable) return;
             const edgeLabel = e.target.closest('.edgeLabel, .edge-label, .label, foreignObject, .node');
             
             if (edgeLabel && edgeLabel.textContent.trim()) {
@@ -3759,3 +4187,257 @@ function renderGenericButtons() {
         }
     });
 }
+
+    // Share Email Modal Logic
+    const shareTopBtn = document.getElementById('shareTopBtn');
+    const shareEmailModal = document.getElementById('shareEmailModal');
+    const closeShareEmailBtn = document.getElementById('closeShareEmailBtn');
+    
+    if (shareTopBtn) {
+        // Prevent default view switching if it has one
+        shareTopBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            shareEmailModal.classList.add('open');
+        });
+    }
+    
+    if (closeShareEmailBtn) {
+        closeShareEmailBtn.addEventListener('click', () => {
+            shareEmailModal.classList.remove('open');
+        });
+    }
+    
+    document.getElementById('copyRoomLayoutBtn').addEventListener('click', () => {
+        const canvas = document.getElementById('roomCanvas');
+        if (!canvas) return;
+
+        const oldW = canvas.width;
+        const oldH = canvas.height;
+        const oldOffsetX = offsetX;
+        const oldOffsetY = offsetY;
+        const oldScale = scale;
+
+        const padMeters = 1;
+        const exportScale = 2; // sharper image
+        const exportPPM = PPM * exportScale;
+
+        canvas.width = (room.w + padMeters * 2) * exportPPM;
+        canvas.height = (room.h + padMeters * 2) * exportPPM;
+
+        offsetX = padMeters * PPM * exportScale;
+        offsetY = padMeters * PPM * exportScale;
+        scale = exportScale;
+
+        draw();
+
+        const dataUrl = canvas.toDataURL('image/png');
+
+        canvas.width = oldW;
+        canvas.height = oldH;
+        offsetX = oldOffsetX;
+        offsetY = oldOffsetY;
+        scale = oldScale;
+
+        draw(); 
+
+        fetch(dataUrl).then(res => res.blob()).then(blob => {
+            if(!blob) {
+                alert('שגיאה ביצירת התמונה');
+                return;
+            }
+            try {
+                navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]).then(() => {
+                    const btn = document.getElementById('copyRoomLayoutBtn');
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> הועתק בהצלחה!';
+                        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+                }).catch(err => {
+                    console.error('Clipboard error:', err);
+                    alert('לא הצלחנו להעתיק. נסה להשתמש ב-Snipping Tool.');
+                });
+            } catch (err) {
+                console.error(err);
+                alert('הדפדפן שלך לא תומך בהעתקת תמונות ללוח. נסה להשתמש ב-Snipping Tool.');
+            }
+        });
+    });
+
+    document.getElementById('copyTopologyBtn').addEventListener('click', () => {
+        const svgEl = document.querySelector('#mermaidOutput svg');
+        if (!svgEl) {
+            const btn = document.getElementById('copyTopologyBtn');
+            const originalText = btn.innerHTML;
+            const originalBg = btn.style.backgroundColor || '';
+            btn.style.backgroundColor = '#ef4444'; // Red color
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> אין תרשים זמין';
+            setTimeout(() => { 
+                btn.style.backgroundColor = originalBg;
+                btn.innerHTML = originalText; 
+            }, 2000);
+            return;
+        }
+        
+        let width = parseInt(svgEl.getAttribute('width'));
+        let height = parseInt(svgEl.getAttribute('height'));
+        if (!width || !height) {
+            const box = svgEl.viewBox.baseVal;
+            if(box && box.width && box.height) {
+                width = box.width;
+                height = box.height;
+            } else {
+                const rect = svgEl.getBoundingClientRect();
+                width = rect.width || 800;
+                height = rect.height || 600;
+            }
+        }
+        
+        const svgData = new XMLSerializer().serializeToString(svgEl);
+        const canvas = document.createElement('canvas');
+        
+        const scale = 2; // high res
+        const pad = 40; // padding inside the scaled canvas coordinate space
+        
+        canvas.width = (width + pad * 2) * scale;
+        canvas.height = (height + pad * 2) * scale;
+        
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.onload = function() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw perfectly scaled and padded
+            ctx.drawImage(img, pad * scale, pad * scale, width * scale, height * scale);
+            
+            canvas.toBlob((blob) => {
+                if(!blob) return;
+                try {
+                    navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': blob })
+                    ]).then(() => {
+                        const btn = document.getElementById('copyTopologyBtn');
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> הועתק בהצלחה!';
+                        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+                    }).catch(err => {
+                        console.error('Clipboard error:', err);
+                        alert('לא הצלחנו להעתיק. נסה להשתמש ב-Snipping Tool.');
+                    });
+                } catch (err) {
+                    alert('הדפדפן שלך לא תומך בהעתקת תמונות ללוח. נסה להשתמש ב-Snipping Tool.');
+                }
+            }, 'image/png');
+        };
+        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    });
+
+    document.getElementById('openMailtoBtn').addEventListener('click', () => {
+        const p = StateManager.getProjects().find(proj => proj.id === StateManager.getCurrentProjectId());
+        if (!p) return;
+        
+        const c = p.clientDetails || {};
+        const clientType = c.clientType || 'endCustomer';
+        const fullName = c.fullName || 'ללא שם';
+        const phone = c.phone || 'ללא טלפון';
+        const inquiryDate = c.inquiryDate || 'לא צוין';
+        const orgName = c.orgName || 'ללא ארגון';
+        const refReseller = c.refReseller || '';
+        const applyingCompany = c.applyingCompany || 'ללא חברה';
+        const finalCustomer = c.finalCustomer || 'ללא לקוח סופי';
+        const integratorRef = c.integratorRef || '';
+        
+        let subject = 'אפיון טכני להצעת מחיר - ';
+        if (clientType === 'endCustomer') {
+            subject += orgName;
+        } else {
+            subject += applyingCompany + ' / ' + finalCustomer;
+        }
+        
+        let body = 'היי,\n\n';
+        body += `תאריך פנייה: ${inquiryDate}\n\n`;
+        
+        if (clientType === 'endCustomer') {
+            if (refReseller) {
+                body += `סיימתי לאפיין את הציוד עבור [לקוח: ${orgName}] (איש קשר: ${fullName}, ${phone}).\n`;
+                body += `הופנה ע"י המשווק: ${refReseller}.\n`;
+            } else {
+                body += `סיימתי לאפיין את הציוד עבור [לקוח: ${orgName}] (איש קשר: ${fullName}, ${phone}).\n`;
+            }
+        } else {
+            body += `סיימתי לאפיין את הציוד עבור לקוח הקצה ${finalCustomer} דרך המשווק ${applyingCompany}.\n`;
+            body += `מבקשה של איש קשר מטעם המשווק - ${fullName}, ${phone}.\n`;
+            if (integratorRef) {
+                body += `אינטגרטור הופנה ע"י: ${integratorRef}\n`;
+            }
+        }
+        
+        body += 'להלן רשימת הציוד המעודכנת להצעת המחיר:\n\n';
+        
+        // Build equipment list
+        let equipment = [];
+        
+        if (p.selectedCamIdx >= 0) {
+            equipment.push(cameras[p.selectedCamIdx].name + ' x1');
+        } else if (p.multiCamEnabled) {
+            equipment.push('מערכת מרובת מצלמות - AVHub x1');
+        }
+        
+        // Count extracams
+        let ecCount = {};
+        (p.extraCams || []).forEach(ec => {
+            ecCount[ec.name] = (ecCount[ec.name] || 0) + 1;
+        });
+        for (let name in ecCount) {
+            equipment.push(name + ' x' + ecCount[name]);
+        }
+        
+        // Count extramics
+        let micCount = {};
+        (p.extraMics || []).forEach(em => {
+            micCount[em.name] = (micCount[em.name] || 0) + 1;
+        });
+        for (let name in micCount) {
+            equipment.push(name + ' x' + micCount[name]);
+        }
+
+        // Count speakers
+        let spkCount = {};
+        (p.extraSpeakers || []).forEach(sp => {
+            spkCount[sp.name] = (spkCount[sp.name] || 0) + 1;
+        });
+        for (let name in spkCount) {
+            equipment.push(name + ' x' + spkCount[name]);
+        }
+
+        // Count displays
+        let dispCount = {};
+        (p.extraDisplays || []).forEach(dp => {
+            dispCount[dp.name] = (dispCount[dp.name] || 0) + 1;
+        });
+        for (let name in dispCount) {
+            equipment.push(name + ' x' + dispCount[name]);
+        }
+
+        // Count others
+        let otherCount = {};
+        (p.extraOthers || []).forEach(eo => {
+            // translate SV to SmartVision for emails
+            let nm = eo.deviceName ? eo.deviceName : eo.id;
+            nm = nm.replace(/SV/g, 'SmartVision');
+            otherCount[nm] = (otherCount[nm] || 0) + 1;
+        });
+        for (let name in otherCount) {
+            equipment.push(name + ' x' + otherCount[name]);
+        }
+        
+        body += equipment.map(item => '• ' + item).join('\n') + '\n\n';
+        
+        body += '[הדבק כאן את תמונת הטופולוגיה]\n\n';
+        body += 'מידות החדר והפריסה בהתאם לנתונים אשר נמסרו מהלקוח:\n\n';
+        body += '[הדבק כאן את תמונת פריסת החדר]\n\n';
+        
+        const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailtoLink;
+    });
